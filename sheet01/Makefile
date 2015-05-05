@@ -5,10 +5,10 @@ CXX_LIBS=-lglut -lGLU -lpthread -lopencv_highgui -lopencv_core -lopencv_legacy -
 .PHONY: all clean
 
 all: $(APP)
+	./$(APP) distorted.png straightened.png 0.001 0.000005
 
 %: %.cpp
 	$(CXX) $^ $(CXX_LIBS) -o $@
 
 clean:
 	@rm -rf $(APP) *~
-

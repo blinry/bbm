@@ -14,6 +14,9 @@
 #include <cv.h>
 #include <highgui.h>
 
+using namespace cv;
+using namespace std;
+
 template<typename T> const T &min(const T &a, const T &b) { return a < b ? a : b; }
 template<typename T> const T &max(const T &a, const T &b) { return a > b ? a : b; }
 
@@ -40,35 +43,77 @@ int main(int argc, char *argv[]) {
      * - ein Bild geladen werden kann.
      */
 
-    /* TODO */
+    Mat img = imread(argv[1]);
 
 
     /**
      * - die Höhe, Breite, Anzahl der Farbkanäle dieses Bildes ausgegeben wird.
      */
 
-    /* TODO */
+    cout << "Width: " << img.cols << " Height: " << img.rows << " Channels: " << img.channels() << endl;
 
 
     /**
      * - dieses Bild in einem \code{cvNamedWindow} angezeigt wird, bis eine Tastatureingabe erfolgt.
      */
 
-    /* TODO */
+    namedWindow("Ahwsum windoh");
+    imshow("Ahwsum windoh", img);
+    waitKey(0);
 
 
     /**
      * - die drei Farbkanäle des Bildes nebeneinander angezeigt werden.
      */
 
-    /* TODO */
+    // Create a Mat of the same size, filled with zeroes
+    Mat empty = Mat::zeros(img.rows, img.cols, CV_8UC1);
+
+    // Split the color channels
+    Mat channels[3];
+    split(img, channels);
+
+    Mat channels_side_by_side;
+
+    // For each channel i...
+    for (int i=0; i<3; i++) {
+        // Create three channels (two of which are zero)...
+        vector<Mat> final_channels;
+        for (int j=0; j<3; j++) {
+            if (i != j) {
+                final_channels.push_back(empty);
+            } else {
+                final_channels.push_back(channels[j]);
+            }
+        }
+
+        // ...merge them...
+        Mat merged;
+        merge(final_channels, merged);
+
+        // ...and append all the results horizontally.
+        if (i == 0) {
+            channels_side_by_side = merged;
+        } else {
+            hconcat(channels_side_by_side, merged, channels_side_by_side);
+        }
+
+    }
+    imshow("Ahwsum windoh", channels_side_by_side);
+    waitKey(0);
 
 
     /**
      * - das Bild zusammen mit einem roten $10 \times 10$ Rechteck um die Bildmitte angezeigt wird.
      */
 
-    /* TODO */
+    Mat img_copy = img.clone();
+    Point2f center = Point2f(img.cols/2, img.rows/2);
+    Point2f shift(5,5);
+    Rect rect(center-shift, center+shift);
+    rectangle(img_copy, rect, Scalar(0, 0, 255));
+    imshow("Ahwsum windoh", img_copy);
+    waitKey(0);
 
 
     /**
@@ -93,14 +138,27 @@ int main(int argc, char *argv[]) {
      *   wobei das Verzerrungszentrum der Bildmitte entspricht.
      */
 
-    /* TODO */
+    Mat straightened(img.rows, img.cols, img.type());
+    for (int x=0; x<img.cols; x++) {
+        for (int y=0; y<img.rows; y++) {
+            float r = sqrt(pow(x - center.x, 2)+pow(y - center.y, 2));
+            float L = 1 + atof(argv[3])*r + atof(argv[4])*r*r;
+            int x2 = center.x + (x - center.x)/L;
+            int y2 = center.y + (y - center.y)/L;
+            if (x2 >= 0 && y2 >= 0 && x2 < img.cols && y2 < img.rows) {
+                straightened.at<Vec3b>(Point2i(x,y)) = img.at<Vec3b>(Point2i(x2, y2));
+            }
+        }
+    }
 
 
     /**
      * - das entzerrte Bild in einer Datei gespeichert wird. 
      */
 
-    /* TODO */
+    imshow("Ahwsum windoh", straightened);
+    imwrite(argv[2], straightened);
+    waitKey(0);
 
 
     /**
