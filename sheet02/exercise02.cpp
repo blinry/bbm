@@ -152,10 +152,12 @@ int main(int argc, char **argv) {
      *   oder möglichst nur Kanten zu entdecken.
      */
 
-    multiply(dx, dx, dx);
-    multiply(dy, dy, dy);
+    Mat dx2 = image.clone();
+    Mat dy2 = image.clone();
+    multiply(dx, dx, dx2);
+    multiply(dy, dy, dy2);
 
-    Mat gradient = dx + dy;
+    Mat gradient = dx2 + dy2;
 
     imshow("Gradient", gradient);
     waitKey(0);
@@ -196,17 +198,45 @@ int main(int argc, char **argv) {
      */
 
     vector<Point> harris_pts;
+    float thresh = 128;
+    Mat dxy, dx2dy2, dxydxy, mtrace, dst, dst_norm, dst_norm_scaled;
 
-    /* TODO */
+    multiply(dx,dy,dxy);
+
+    // Blur
+    GaussianBlur(dx2,dx2,Size(7,7),2.0,0.0,BORDER_DEFAULT);
+    GaussianBlur(dy2,dy2,Size(7,7),0.0,2.0,BORDER_DEFAULT);
+    GaussianBlur(dxy,dxy,Size(7,7),2.0,2.0,BORDER_DEFAULT);
+
+    //forth step calculating R with k=0.04
+    multiply(dx2,dy2,dx2dy2);
+    multiply(dxy,dxy,dxydxy);
+    pow((dx2 + dy2),2.0,mtrace);
+    dst = (dx2dy2 - dxydxy) - 0.04 * mtrace;
+    //normalizing result from 0 to 255
+    normalize( dst, dst_norm, 0, 255, NORM_MINMAX, CV_32FC1, Mat());
+    convertScaleAbs(dst_norm, dst_norm_scaled);
+
+    for(int x = 0; x < image.cols; x++) {
+        for(int y = 0; y < image.rows; y++) {
+            if(dst_norm.at<float>(y,x) > thresh) {
+                harris_pts.push_back(Point(x,y));
+            }
+        }
+    }
 
 
     /**
      * - Zeichne ein $3\times3$ Rechteck um jede gefundene Harris-Corner.
      */
 
-    /* TODO */
+    for (unsigned long i=0; i<harris_pts.size(); i++) {
+        Point shift(5,5);
+        Rect rect(harris_pts[i]-shift, harris_pts[i]+shift);
+        rectangle(image, rect, 1);
+    }
 
-    //cvShowImage("Harris Corners", image);
-    //cvWaitKey(0);
+    imshow("Harris Corners", image);
+    waitKey(0);
 }
 
