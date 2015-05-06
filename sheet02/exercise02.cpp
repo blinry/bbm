@@ -12,6 +12,9 @@
 #include <cv.h>
 #include <highgui.h>
 
+using namespace std;
+using namespace cv;
+
 int main(int argc, char **argv) {
     /**
      * Aufgabe: 2D-Operationen auf Bildern (5 Punkte)
@@ -37,43 +40,44 @@ int main(int argc, char **argv) {
         std::cerr << "usage: " << argv[0] << " <image>" << std::endl;
         exit(1);
     }
-    IplImage *image = cvLoadImage(argv[1]);
-    CvSize size = cvGetSize(image);
-    IplImage *imageFloat = cvCreateImage(size, IPL_DEPTH_32F, image->nChannels);
-    IplImage *gray = cvCreateImage(size, IPL_DEPTH_32F, 1);
 
-    /* TODO */
+    Mat image = imread(argv[1],CV_LOAD_IMAGE_GRAYSCALE);
+    image.convertTo(image, CV_32FC1, 1.0/255);
 
-    cvNamedWindow("Grayscale"); 
-    cvShowImage("Grayscale", gray);
-    cvWaitKey(0); 
+    namedWindow("Grayscale");
+    imshow("Grayscale", image);
+    waitKey(0);
 
     /**
      * - Falte ein verrauschtes Testbild mit Gaußfunktionen verschiedener
      *   Varianzen. Was passiert? Welchen Einfluss hat die Kernelgröße?
      */
-    IplImage *lgauss = cvCreateImage(size, IPL_DEPTH_32F, 1);
-    IplImage *sgauss = cvCreateImage(size, IPL_DEPTH_32F, 1);
 
-    /* TODO */
+    Mat lgauss;
+    Mat sgauss;
 
-    cvNamedWindow("Large Gaussian"); 
-    cvShowImage("Large Gaussian", lgauss);
-    cvNamedWindow("Small Gaussian"); 
-    cvShowImage("Small Gaussian", sgauss);
-    cvWaitKey(0); 
+    GaussianBlur(image, lgauss, Size(0,0), 10);
+    GaussianBlur(image, sgauss, Size(0,0), 3);
+
+    namedWindow("Large Gaussian");
+    imshow("Large Gaussian", lgauss);
+    waitKey(0);
+
+    namedWindow("Small Gaussian");
+    imshow("Small Gaussian", sgauss);
+    waitKey(0);
 
     /**
      * - Betrachte die Differenzen zweier gaußgefilterter Bilder (evt.
      *   skalieren).
      */
-    IplImage *dog = cvCreateImage(size, IPL_DEPTH_32F, 1);
 
-    /* TODO */
+    Mat dog;
+    absdiff(lgauss, sgauss, dog);
 
-    cvNamedWindow("Difference of Gaussians"); 
-    cvShowImage("Difference of Gaussians", dog);
-    cvWaitKey(0); 
+    namedWindow("Difference of Gaussians");
+    imshow("Difference of Gaussians", dog);
+    waitKey(0);
 
     /**
      * Aufgabe: Diskrete Ableitungen (5 Punkte)
@@ -96,7 +100,13 @@ int main(int argc, char **argv) {
      *   approximiert.
      */
 
-    /* TODO */
+    Mat kernelx = Mat::zeros(1, 3, CV_32F);
+    kernelx.at<float>(0,0) = -1;
+    kernelx.at<float>(0,2) = 1;
+
+    Mat kernely = Mat::zeros(3, 1, CV_32F);
+    kernely.at<float>(0,0) = -1;
+    kernely.at<float>(2,0) = 1;
 
 
     /**
@@ -104,29 +114,33 @@ int main(int argc, char **argv) {
      *   wende es auf ein glattes Testbild an.  Was passiert, wenn du ein
      *   verrauschtes Testbild verwendest?
      */
-    IplImage *dx = cvCreateImage(size, IPL_DEPTH_32F, 1);
-    IplImage *dy = cvCreateImage(size, IPL_DEPTH_32F, 1);
 
-    /* TODO */
+    Mat dx = image.clone();
+    Mat dy = image.clone();
 
-    cvNamedWindow("DX"); 
-    cvShowImage("DX", dx);
-    cvNamedWindow("DY"); 
-    cvShowImage("DY", dy);
-    cvWaitKey(0); 
+    filter2D(image, dx, -1, kernelx);
+    filter2D(image, dy, -1, kernely);
+
+    namedWindow("DX");
+    imshow("DX", dx);
+    waitKey(0);
+
+    namedWindow("DY");
+    imshow("DY", dy);
+    waitKey(0);
 
     /**
      * - Verwende in der Implementierung nun Faltung mit dem Sobel-Operator
      *   (\code{cvSobel}) und beobachte die Ergebnisse auf dem verrauschten
      *   Testbild.
      */
-    IplImage *sobel = cvCreateImage(size, IPL_DEPTH_32F, 1);
 
-    /* TODO */
+    Mat sobel;
+    Sobel(image, sobel, -1, 1, 1);
 
-    cvNamedWindow("sobel"); 
-    cvShowImage("sobel", sobel);
-    cvWaitKey(0);
+    namedWindow("sobel");
+    imshow("sobel", sobel);
+    waitKey(0);
 
     /**
      * Aufgabe: Features (10 Punkte)
@@ -137,33 +151,37 @@ int main(int argc, char **argv) {
      *   Schwellwerte des Gradienten, um möglichst alle Kanten zu entdecken
      *   oder möglichst nur Kanten zu entdecken.
      */
-    IplImage* gradient = cvCreateImage(size, IPL_DEPTH_32F, 1);
 
-    /* TODO */
+    multiply(dx, dx, dx);
+    multiply(dy, dy, dy);
 
-    cvShowImage("Gradient", gradient);
-    cvWaitKey(0);
+    Mat gradient = dx + dy;
 
-    IplImage* edge1 = cvCreateImage(size, IPL_DEPTH_8U, 1);
-    IplImage* edge2 = cvCreateImage(size, IPL_DEPTH_8U, 1);
+    imshow("Gradient", gradient);
+    waitKey(0);
 
-    /* TODO */
+    Mat edge1 = image.clone();
+    Mat edge2 = image.clone();
+    threshold(gradient, edge1, 0.005, 1, THRESH_BINARY);
+    threshold(gradient, edge2, 0.1, 1, THRESH_BINARY);
 
-    cvShowImage("All edges", edge1);
-    cvWaitKey(0);
-    cvShowImage("Only edges", edge2);
-    cvWaitKey(0);
+    imshow("All edges", edge1);
+    waitKey(0);
+    imshow("Only edges", edge2);
+    waitKey(0);
 
     /*
      * - Vergleiche mit dem Ergebnis des Canny-Kantendetektors
      *   (\code{cvCanny}), wenn er mit diesen Parametern aufgerufen wird.
      */
-    IplImage* edge = cvCreateImage(size, IPL_DEPTH_8U, 1);
 
-    /* TODO */
+    Mat image_8u;
+    image.convertTo(image_8u, CV_8UC1, 255);
+    Mat edge = image_8u.clone();
+    Canny(image_8u, edge, 100, 200);
 
-    cvShowImage("Canny", edge);
-    cvWaitKey(0);
+    imshow("Canny", edge);
+    waitKey(0);
 
     /**
      * Einzelne herausragende Punkte werden auch als Featurepunkte oder Ecken
@@ -176,7 +194,8 @@ int main(int argc, char **argv) {
      *   Ausschlag des Indikators entgegennimmt und die Featurepunkte
      *   zurückgibt.
      */
-    std::vector<CvPoint> harris_pts;
+
+    vector<Point> harris_pts;
 
     /* TODO */
 
@@ -187,7 +206,7 @@ int main(int argc, char **argv) {
 
     /* TODO */
 
-    cvShowImage("Harris Corners", image);
-    cvWaitKey(0);
+    //cvShowImage("Harris Corners", image);
+    //cvWaitKey(0);
 }
 
