@@ -41,7 +41,10 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    Mat image = imread(argv[1],CV_LOAD_IMAGE_GRAYSCALE);
+    // Convert image to grayscale directly with loading
+    Mat image = imread(argv[1], CV_LOAD_IMAGE_GRAYSCALE);
+
+    // Convert it to a float between 0 and 1
     image.convertTo(image, CV_32FC1, 1.0/255);
 
     namedWindow("Grayscale");
@@ -101,12 +104,12 @@ int main(int argc, char **argv) {
      */
 
     Mat kernelx = Mat::zeros(1, 3, CV_32F);
-    kernelx.at<float>(0,0) = -1;
-    kernelx.at<float>(0,2) = 1;
+    kernelx.at<float>(0,0) = -0.5;
+    kernelx.at<float>(0,2) = 0.5;
 
     Mat kernely = Mat::zeros(3, 1, CV_32F);
-    kernely.at<float>(0,0) = -1;
-    kernely.at<float>(2,0) = 1;
+    kernely.at<float>(0,0) = -0.5;
+    kernely.at<float>(2,0) = 0.5;
 
 
     /**
@@ -120,6 +123,9 @@ int main(int argc, char **argv) {
 
     filter2D(image, dx, -1, kernelx);
     filter2D(image, dy, -1, kernely);
+
+    dx = abs(dx);
+    dy = abs(dy);
 
     namedWindow("DX");
     imshow("DX", dx);
@@ -135,11 +141,16 @@ int main(int argc, char **argv) {
      *   Testbild.
      */
 
-    Mat sobel;
-    Sobel(image, sobel, -1, 1, 1);
+    Mat sobelx, sobely;
+    Sobel(image, sobelx, -1, 1, 0);
+    Sobel(image, sobely, -1, 0, 1);
 
-    namedWindow("sobel");
-    imshow("sobel", sobel);
+    namedWindow("Sobel X");
+    imshow("Sobel X", sobelx);
+    waitKey(0);
+
+    namedWindow("Sobel Y");
+    imshow("Sobel Y", sobely);
     waitKey(0);
 
     /**
@@ -152,20 +163,15 @@ int main(int argc, char **argv) {
      *   oder möglichst nur Kanten zu entdecken.
      */
 
-    Mat dx2 = image.clone();
-    Mat dy2 = image.clone();
-    multiply(dx, dx, dx2);
-    multiply(dy, dy, dy2);
-
-    Mat gradient = dx2 + dy2;
+    Mat gradient = dx + dy;
 
     imshow("Gradient", gradient);
     waitKey(0);
 
     Mat edge1 = image.clone();
     Mat edge2 = image.clone();
-    threshold(gradient, edge1, 0.005, 1, THRESH_BINARY);
-    threshold(gradient, edge2, 0.1, 1, THRESH_BINARY);
+    threshold(gradient, edge1, 0.05, 1, THRESH_BINARY);
+    threshold(gradient, edge2, 0.2, 1, THRESH_BINARY);
 
     imshow("All edges", edge1);
     waitKey(0);
@@ -198,33 +204,42 @@ int main(int argc, char **argv) {
      */
 
     vector<Point> harris_pts;
-    float thresh = 128;
-    Mat dxy, dx2dy2, dxydxy, mtrace, dst, dst_norm, dst_norm_scaled;
+    float thresh = 2e-5;
+    float k = 0.04;
 
-    multiply(dx,dy,dxy);
+    Mat dx2;
+    multiply(dx, dx, dx2);
 
-    // Blur
-    GaussianBlur(dx2,dx2,Size(7,7),2.0,0.0,BORDER_DEFAULT);
-    GaussianBlur(dy2,dy2,Size(7,7),0.0,2.0,BORDER_DEFAULT);
-    GaussianBlur(dxy,dxy,Size(7,7),2.0,2.0,BORDER_DEFAULT);
+    Mat dy2;
+    multiply(dy, dy, dy2);
 
-    //forth step calculating R with k=0.04
+    Mat dxdy;
+    multiply(dx, dy, dxdy);
+
+    GaussianBlur(dx2, dx2, Size(7,7), 2.0, 0.0, BORDER_DEFAULT);
+    GaussianBlur(dy2, dy2, Size(7,7), 0.0, 2.0, BORDER_DEFAULT);
+    GaussianBlur(dxdy, dxdy, Size(7,7), 2.0, 2.0, BORDER_DEFAULT);
+
+    Mat dx2dy2;
     multiply(dx2,dy2,dx2dy2);
-    multiply(dxy,dxy,dxydxy);
-    pow((dx2 + dy2),2.0,mtrace);
-    dst = (dx2dy2 - dxydxy) - 0.04 * mtrace;
-    //normalizing result from 0 to 255
-    normalize( dst, dst_norm, 0, 255, NORM_MINMAX, CV_32FC1, Mat());
-    convertScaleAbs(dst_norm, dst_norm_scaled);
+
+    Mat dxdy2;
+    multiply(dxdy,dxdy,dxdy2);
+
+    Mat trace = dx2 + dy2;
+    Mat determinant = dx2dy2 - dxdy2;
+
+    Mat trace2;
+    multiply(trace, trace, trace2);
+    Mat response = determinant - k*trace2;
 
     for(int x = 0; x < image.cols; x++) {
         for(int y = 0; y < image.rows; y++) {
-            if(dst_norm.at<float>(y,x) > thresh) {
+            if(response.at<float>(y,x) > thresh) {
                 harris_pts.push_back(Point(x,y));
             }
         }
     }
-
 
     /**
      * - Zeichne ein $3\times3$ Rechteck um jede gefundene Harris-Corner.
