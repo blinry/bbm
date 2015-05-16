@@ -15,6 +15,13 @@
 #include <cv.h>
 #include <highgui.h>
 
+#include <list>
+
+using namespace cv;
+using namespace std;
+
+#define WINDOW_SIZE 10
+
 /**
  * Aufgabe: Median-Filter (10 Punkte)
  *
@@ -25,6 +32,45 @@
 
 /* TODO */
 
+Mat median_filter(Mat img, int windowSize){
+	
+	//Mat *originalImage = new Mat(img);
+	Mat transformedImage(img.rows, img.cols, CV_32FC1);
+	vector<float> window;
+	
+	for(int i = 0; i < img.cols; i++){
+		for(int j = 0; j < img.rows; j++){
+			// 2.1
+			window.clear();
+			for(int x = (-windowSize/2); x < windowSize/2; x++){
+				for(int y = (-windowSize/2); y < windowSize/2; y++){
+					if (x >= 0 && x < img.cols && y >= 0 && y < img.rows) {
+						window.push_back( img.at<float>(Point2i(i+x,j+y)) );
+					}
+				}
+			}
+			// 2.2
+			sort(window.begin(), window.end());
+// 			// 2.3
+			transformedImage.at<float>(Point2i(i,j)) = window[window.size()/2];
+		}
+	}
+	// Steps:
+	/* 
+	 * 1 - Create a Window with size windowSize
+	 * 2- Slide with the window over the original image.
+	 * 	2.1 - get all the pixels in that area
+	 * 	2.2 - calculate the median
+	 * 	2.3 - set the median pixel as the value in the corresponding position in the transformed image
+	 */
+	
+	/*
+	 * transformedImage.at(Point pt) = median
+	 */
+	
+	return transformedImage;
+}
+
 
 int main(int argc, char **argv) {
     if (argc < 2) {
@@ -33,13 +79,19 @@ int main(int argc, char **argv) {
     }
 
     // load the input image
-    IplImage *img = cvLoadImage(argv[1]);
+//     IplImage *img = cvLoadImage(argv[1]);
 
     /**
      * - Wende den Median-Filter auf ein Graustufenbild an.
      */
 
     /* TODO */
+	Mat img = imread(argv[1], CV_LOAD_IMAGE_GRAYSCALE);
+	img.convertTo(img, CV_32FC1, 1.0/255);
+	Mat medianImg = median_filter(img, WINDOW_SIZE);
+	namedWindow("Median Filter");
+	imshow("Median Filter", medianImg);
+	waitKey(0);
 
 
     /**
@@ -75,13 +127,13 @@ int main(int argc, char **argv) {
     /**
      * - Transformiere das Gradientenbild in den Hough-Raum und zeige das Bild an.
      */
-    IplImage *hough = cvCreateImage(cvSize(400, 400), IPL_DEPTH_32F, 1);
+//     IplImage *hough = cvCreateImage(cvSize(400, 400), IPL_DEPTH_32F, 1);
 
     /* TODO */
 
-    cvNamedWindow("Hough Space"); 
-    cvShowImage("Hough Space", hough);
-    cvWaitKey(0);
+//     cvNamedWindow("Hough Space"); 
+//     cvShowImage("Hough Space", hough);
+//     cvWaitKey(0);
 
     /**
      * - Finde die markantesten Linien und zeichne diese in das Originalbild ein.
@@ -89,8 +141,8 @@ int main(int argc, char **argv) {
 
     /* TODO */
 
-    cvNamedWindow("Hough Lines");
-    cvShowImage("Hough Lines", img);
-    cvWaitKey(0); 
+//     cvNamedWindow("Hough Lines");
+//     cvShowImage("Hough Lines", img);
+//     cvWaitKey(0); 
 }
 
