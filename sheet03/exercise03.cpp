@@ -15,12 +15,13 @@
 #include <cv.h>
 #include <highgui.h>
 
-#include <list>
+#include <math.h>
 
 using namespace cv;
 using namespace std;
 
 #define WINDOW_SIZE 10
+#define PI 180
 
 /**
  * Aufgabe: Median-Filter (10 Punkte)
@@ -71,6 +72,44 @@ Mat median_filter(Mat img, int windowSize){
 	return transformedImage;
 }
 
+Mat hough_tranformation(Mat img){
+	
+// 	int max_d = sqrt(exp2(img.rows/2) + exp2(img.cols/2));
+	int max_d = sqrt(pow(img.rows/2, 2) + pow(img.cols/2, 2));
+// 	int min_d = -max_d;
+	
+// 	cout << img.rows << "\n";
+	cout << "max d: " << max_d << "\n";
+	
+	Mat hough = Mat::zeros(PI, 2*max_d, CV_8UC1);
+// 	Mat hough = Mat::zeros(42, 42, CV_8UC1);
+	
+	for(int i = 0; i < img.cols; i++){
+		for(int j = 0; j < img.rows; j++){
+			if(img.at<float>(Point2i(i,j)) != 0){
+				for(int alpha = 0; alpha < PI; alpha++){
+					float alpha_radian = alpha*M_PI/PI;
+					int d = i*cos(alpha_radian) + j*sin(alpha_radian) + max_d - 1;
+					cout << "d: " << d << " ; ";
+					cout << "alpha: " << alpha << "\n";
+					hough.at<uint>(Point2i(alpha, d))++;
+				}
+			}
+		}
+	}
+	
+	return hough;
+// 	max_d := sqrt((1/2 * bildhöhe)^2 + (1/2 * bildbreite)^2)
+// 	min_d := max_d * -1
+// 	houghRaum[0...\pi][min_d...max_d] := 0
+// 	foreach pixel != 0 do
+// 		for \alpha := 0 to \pi do
+// 		d := pixelx * cos(\alpha) + pixely * sin(\alpha)
+// 		houghRaum[\alpha][d]++
+// 		end
+// 	end
+}
+
 
 int main(int argc, char **argv) {
     if (argc < 2) {
@@ -97,26 +136,26 @@ int main(int argc, char **argv) {
      * - Wende den Median-Filter auf die einzelnen Kanäle eines Farbbilds an
      */
 
-	Mat channels[3];
-	Mat median_channels[3];
-	img = imread(argv[1]);
-	img.convertTo(img, CV_32FC3, 1.0/255);
-	split(img, channels);
-	for (int i = 0; i < 3; i++){
-		median_channels[i] = median_filter(channels[i], WINDOW_SIZE);
-	}
-	namedWindow("Median Filter Colour 1");
-	imshow("Median Filter Colour 1", median_channels[0]);
-	waitKey(0);
-	imshow("Median Filter Colour 1", median_channels[1]);
-	waitKey(0);
-	imshow("Median Filter Colour 1", median_channels[2]);
-	waitKey(0);
-	
-	Mat merged_channels(img.rows, img.cols, CV_32FC3);
-	merge(median_channels, 3, merged_channels);
-	imshow("Median Filter Colour 1", merged_channels);
-	waitKey(0);
+// 	Mat channels[3];
+// 	Mat median_channels[3];
+// 	img = imread(argv[1]);
+// 	img.convertTo(img, CV_32FC3, 1.0/255);
+// 	split(img, channels);
+// 	for (int i = 0; i < 3; i++){
+// 		median_channels[i] = median_filter(channels[i], WINDOW_SIZE);
+// 	}
+// 	namedWindow("Median Filter Colour 1");
+// 	imshow("Median Filter Colour 1", median_channels[0]);
+// 	waitKey(0);
+// 	imshow("Median Filter Colour 1", median_channels[1]);
+// 	waitKey(0);
+// 	imshow("Median Filter Colour 1", median_channels[2]);
+// 	waitKey(0);
+// 	
+// 	Mat merged_channels(img.rows, img.cols, CV_32FC3);
+// 	merge(median_channels, 3, merged_channels);
+// 	imshow("Median Filter Colour 1", merged_channels);
+// 	waitKey(0);
 
 
     /**
@@ -133,6 +172,12 @@ int main(int argc, char **argv) {
      */
 
     /* TODO */
+	img = imread(argv[1], CV_LOAD_IMAGE_GRAYSCALE);
+	img.convertTo(img, CV_32FC1, 1.0/255);
+	Mat houghImg = hough_tranformation(img);
+	namedWindow("Hough Filter");
+	imshow("Hough Filter", houghImg);
+	waitKey(0);
 
 
     /**
