@@ -44,7 +44,7 @@ Mat median_filter(Mat img, int windowSize){
 			window.clear();
 			for(int x = (-windowSize/2); x < windowSize/2; x++){
 				for(int y = (-windowSize/2); y < windowSize/2; y++){
-					if (x >= 0 && x < img.cols && y >= 0 && y < img.rows) {
+					if (i+x >= 0 && i+x < img.cols && j+y >= 0 && j+y < img.rows) {
 						window.push_back( img.at<float>(Point2i(i+x,j+y)) );
 					}
 				}
