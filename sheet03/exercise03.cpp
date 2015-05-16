@@ -85,20 +85,38 @@ int main(int argc, char **argv) {
      * - Wende den Median-Filter auf ein Graustufenbild an.
      */
 
-    /* TODO */
 	Mat img = imread(argv[1], CV_LOAD_IMAGE_GRAYSCALE);
-	img.convertTo(img, CV_32FC1, 1.0/255);
-	Mat medianImg = median_filter(img, WINDOW_SIZE);
-	namedWindow("Median Filter");
-	imshow("Median Filter", medianImg);
-	waitKey(0);
+// 	img.convertTo(img, CV_32FC1, 1.0/255);
+// 	Mat medianImg = median_filter(img, WINDOW_SIZE);
+// 	namedWindow("Median Filter");
+// 	imshow("Median Filter", medianImg);
+// 	waitKey(0);
 
 
     /**
      * - Wende den Median-Filter auf die einzelnen Kanäle eines Farbbilds an
      */
 
-    /* TODO */
+	Mat channels[3];
+	Mat median_channels[3];
+	img = imread(argv[1]);
+	img.convertTo(img, CV_32FC3, 1.0/255);
+	split(img, channels);
+	for (int i = 0; i < 3; i++){
+		median_channels[i] = median_filter(channels[i], WINDOW_SIZE);
+	}
+	namedWindow("Median Filter Colour 1");
+	imshow("Median Filter Colour 1", median_channels[0]);
+	waitKey(0);
+	imshow("Median Filter Colour 1", median_channels[1]);
+	waitKey(0);
+	imshow("Median Filter Colour 1", median_channels[2]);
+	waitKey(0);
+	
+	Mat merged_channels(img.rows, img.cols, CV_32FC3);
+	merge(median_channels, 3, merged_channels);
+	imshow("Median Filter Colour 1", merged_channels);
+	waitKey(0);
 
 
     /**
