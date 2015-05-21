@@ -74,7 +74,7 @@ Mat hough_tranformation(Mat img){
 
     for (int x=0; x < img.rows; x++) {
         for (int y=0; y < img.cols; y++) {
-            if (img.at<float>(x,y) > 0) {
+            if (img.at<unsigned char>(x,y) > 0) {
                 for (int a=0; a < HOUGH_SIZE; a++) {
                     float alpha = 1.0*a/HOUGH_SIZE*M_PI;
                     // Shift d by max_d to make it always positive:
@@ -164,7 +164,7 @@ int main(int argc, char **argv) {
     waitKey(0);
 
     Mat filteredHough(houghImg.rows, houghImg.cols, houghImg.type());
-    threshold(houghImg, filteredHough, 1.5, 1, THRESH_BINARY);
+    threshold(houghImg, filteredHough, 1.0, 1, THRESH_BINARY);
 
     namedWindow("Hough Filter");
     imshow("Hough Filter", filteredHough);
@@ -175,6 +175,7 @@ int main(int argc, char **argv) {
      * - Finde die markantesten Linien und zeichne diese in das Originalbild ein.
      */
 
+    img = imread(argv[1]);
     int max_d = sqrt(img.rows*img.rows + img.cols*img.cols);
 
     for(int d = 0; d < filteredHough.cols; d++){
@@ -185,16 +186,12 @@ int main(int argc, char **argv) {
                 // Shift the d back
                 int real_d = d - max_d;
 
-                int x = real_d*cos(M_PI/2.0-alpha);
-                int y = real_d*sin(M_PI/2.0-alpha);
+                int x = 1.0*real_d/cos(M_PI/2-alpha);
+                int y = 0;
                 int x2 = 0;
                 int y2 = 1.0*real_d/cos(alpha);
 
-                line(img, Point(x2,y2), Point(x,y), Scalar(255, 255, 255));
-                Point mid(x,y);
-                Point shift(5,5);
-                Rect rect(mid-shift, mid+shift);
-                rectangle(img, rect, 0);
+                line(img, Point(x2,y2), Point(x,y), Scalar(0, 0, 255));
             }
         }
     }
