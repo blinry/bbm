@@ -163,7 +163,7 @@ int main(int argc, char **argv) {
     imshow("Hough Filter", houghImg);
     waitKey(0);
 
-    Mat filteredHough(houghImg.rows, houghImg.cols, houghImg.type());
+    Mat filteredHough;
     threshold(houghImg, filteredHough, 1.0, 1, THRESH_BINARY);
 
     namedWindow("Hough Filter");
