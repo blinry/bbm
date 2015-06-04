@@ -135,6 +135,10 @@ int main(int argc, char *argv[]) {
     Mat transformation = getPerspectiveTransform(points1, points2);
     transformation.convertTo(transformation, CV_32FC1, 1);
 
+    /**
+     * - Bestimme die notwendige Bildgröße für das Panoramabild.
+     */
+
     Point2f topleft(0, 0);
     Point2f topright(img2.cols-1, 0);
     Point2f bottomleft(0, img2.rows-1);
@@ -149,17 +153,6 @@ int main(int argc, char *argv[]) {
     int xmin = min(topleft_t.x, bottomleft_t.x);
     int ymax = max(bottomright_t.y, bottomleft_t.y);
     int ymin = min(topright_t.y, topleft_t.y);
-
-    std::cout << xmax << std::endl;
-    std::cout << ymax << std::endl;
-    std::cout << xmin << std::endl;
-    std::cout << ymin << std::endl;
-
-    //Mat both = Mat::zeros(ymax-ymin, xmax-xmin, CV_32F);
-	
-	/**
-	 * - Bestimme die notwendige Bildgröße für das Panoramabild.
-	 */
 
     /**
      * - Projiziere das linke Bild in die Bildebene des rechten Bildes. Beachte
