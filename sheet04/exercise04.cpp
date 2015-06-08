@@ -18,9 +18,6 @@
 
 using namespace cv;
 
-//template<typename T> const T &min(const T &a, const T &b) { return a < b ? a : b; }
-//template<typename T> const T &max(const T &a, const T &b) { return a > b ? a : b; }
-
 Point2f operator*(Mat M, const Point2f& p){
     Mat src(3, 1, CV_32FC1);
 
@@ -65,8 +62,8 @@ int main(int argc, char *argv[]) {
 
     /* 4.1.1 Save trees!
      *
-     * | 1 0 a |   | x |   | x + a |
-     * | 0 1 b | * | y | = | y + b |
+     * | 1 0 a |   | x |   | x + f*a |
+     * | 0 1 b | * | y | = | y + f*b |
      * | 0 0 1 |   | f |   |   f   |
      *
      * 4.1.3: Four.
