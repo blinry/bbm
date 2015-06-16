@@ -18,6 +18,7 @@
 #include <highgui.h>
 
 using namespace std;
+using namespace cv;
 
 int main(int argc, char *argv[]) {
     if(argc<3){
@@ -25,28 +26,12 @@ int main(int argc, char *argv[]) {
         exit(0);
     }
 
-    // create a window
-    cvNamedWindow("mainWin", CV_WINDOW_AUTOSIZE); 
-    cvMoveWindow("mainWin", 100, 100);
+    Mat img1 = imread(argv[1]);
+    img1.convertTo(img1, CV_32FC3, 1.0/255);
+    Mat img2 = imread(argv[2]);
+    img2.convertTo(img2, CV_32FC3, 1.0/255);
 
-    // load an image
-    IplImage *img1 = cvLoadImage(argv[1]);
-    IplImage *img2 = cvLoadImage(argv[2]);
-
-    if(!img1 || !img2) {
-        cout << "Could not load image file: " << argv[1] << " or " << argv[2] << endl;
-        exit(1);
-    }
-
-    //Convert to suitable format
-    IplImage* img1f = cvCreateImage(cvGetSize(img1), IPL_DEPTH_32F, img1->nChannels);
-    IplImage* img2f = cvCreateImage(cvGetSize(img2), IPL_DEPTH_32F, img2->nChannels);
-
-    cvConvertScale(img1, img1f, 1.0/255.0);
-    cvConvertScale(img2, img2f, 1.0/255.0);
-
-    //Create depth map
-    IplImage* depth = cvCreateImage(cvGetSize(img2), IPL_DEPTH_32F, 1);
+    Mat depth = Mat::zeros(img1.rows, img1.cols, CV_32FC1);
 
     /**
      * Aufgabe: Erzeugen einer Tiefenkarte (10 Punkte)
@@ -62,7 +47,46 @@ int main(int argc, char *argv[]) {
      * einem Fenster an.
      */
 
-    /* TODO */
+    float min_dx = +999999999999; // dirty hack
+    float max_dx = -999999999999;
+
+    for (int x = 0; x < img1.cols; x++) {
+        for (int y = 0; y < img1.rows; y++) {
+            float best_dx = 0;
+            float best_diff = 999999999999;
+            for (int dx = -50; dx <= 50; dx++) {
+                if (x+dx >= 0 && x+dx < img2.cols) {
+                    Vec3f d1 = img1.at<Vec3f>(y,x);
+                    Vec3f d2 = img2.at<Vec3f>(y,x+dx);
+                    float diff = abs(d1[0]-d2[0])+abs(d1[1]-d2[1])+abs(d1[2]-d2[2]);
+                    if (diff < best_diff) {
+                        best_diff = diff;
+                        best_dx = dx;
+                    }
+                }
+            }
+
+            depth.at<float>(y,x) = best_dx;
+
+            if (best_dx < min_dx) {
+                min_dx = best_dx;
+            }
+
+            if (best_dx > max_dx) {
+                max_dx = best_dx;
+            }
+        }
+    }
+
+    for (int x = 0; x < depth.cols; x++) {
+        for (int y = 0; y < depth.rows; y++) {
+            depth.at<float>(y,x) = 1-(depth.at<float>(y,x)-min_dx)/(max_dx-min_dx);
+        }
+    }
+
+    namedWindow("Depth");
+    imshow("Depth", depth);
+    waitKey(0);
 
 
     /**
@@ -81,8 +105,55 @@ int main(int argc, char *argv[]) {
      *   sich nichts mehr ändert.
      */
 
-    /* TODO */
+    min_dx = +999999999999;
+    max_dx = -999999999999;
 
+    for (int x = 0; x < img1.cols; x++) {
+        for (int y = 0; y < img1.rows; y++) {
+            float best_dx = 0;
+            float best_diff = 999999999999;
+            for (int dx = -50; dx <= 50; dx++) {
+                if (x+dx >= 0 && x+dx < img2.cols) {
+                    float diff = 0;
+                    int count = 0;
+                    for (int rectx = -1; rectx <= 1; rectx ++) {
+                        for (int recty = -1; recty <= 1; recty ++) {
+                            if (x+dx+rectx >= 0 && x+dx+rectx < img2.cols && y+recty >= 0 && y+recty <= img2.rows) {
+                                Vec3f d1 = img1.at<Vec3f>(y,x);
+                                Vec3f d2 = img2.at<Vec3f>(y+recty,x+dx+rectx);
+                                diff += abs(d1[0]-d2[0])+abs(d1[1]-d2[1])+abs(d1[2]-d2[2]);
+                                count++;
+                            }
+                        }
+                    }
+                    if (diff/count < best_diff) {
+                        best_diff = diff/count;
+                        best_dx = dx;
+                    }
+                }
+            }
+
+            depth.at<float>(y,x) = best_dx;
+
+            if (best_dx < min_dx) {
+                min_dx = best_dx;
+            }
+
+            if (best_dx > max_dx) {
+                max_dx = best_dx;
+            }
+        }
+    }
+
+    for (int x = 0; x < depth.cols; x++) {
+        for (int y = 0; y < depth.rows; y++) {
+            depth.at<float>(y,x) = 1-(depth.at<float>(y,x)-min_dx)/(max_dx-min_dx);
+        }
+    }
+
+    namedWindow("Depth");
+    imshow("Depth", depth);
+    waitKey(0);
 
     return 0;
 }

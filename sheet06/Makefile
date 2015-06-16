@@ -5,6 +5,7 @@ CXX_LIBS=-lglut -lGLU -lpthread -lopencv_highgui -lopencv_core -lopencv_legacy -
 .PHONY: all clean
 
 all: $(APP)
+	./exercise06 plant_l.png plant_r.png
 
 %: %.cpp
 	$(CXX) $^ $(CXX_LIBS) -o $@
