@@ -151,6 +151,8 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    //medianBlur(depth, depth, 3);
+
     namedWindow("Depth");
     imshow("Depth", depth);
     waitKey(0);
