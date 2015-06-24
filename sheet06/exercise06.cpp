@@ -118,8 +118,8 @@ int main(int argc, char *argv[]) {
                     int count = 0;
                     for (int rectx = -1; rectx <= 1; rectx ++) {
                         for (int recty = -1; recty <= 1; recty ++) {
-                            if (x+dx+rectx >= 0 && x+dx+rectx < img2.cols && y+recty >= 0 && y+recty <= img2.rows) {
-                                Vec3f d1 = img1.at<Vec3f>(y,x);
+                            if (x+dx+rectx >= 0 && x+dx+rectx < img2.cols && x+rectx >= 0 && x+rectx < img1.cols && y+recty >= 0 && y+recty < img2.rows) {
+                                Vec3f d1 = img1.at<Vec3f>(y+recty,x+rectx);
                                 Vec3f d2 = img2.at<Vec3f>(y+recty,x+dx+rectx);
                                 diff += abs(d1[0]-d2[0])+abs(d1[1]-d2[1])+abs(d1[2]-d2[2]);
                                 count++;
