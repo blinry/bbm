@@ -51,35 +51,8 @@
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
 
-std::ostream &operator<<(std::ostream &o, const CvPoint3D32f &p) {
-	o << "(" << p.x << ", " << p.y << ", " << p.z << ")";
-	return o;
-}
-
-float dot(const CvPoint3D32f &a, const CvPoint3D32f &b) {
-	return a.x * b.x + a.y * b.y + a.z * b.z;
-}
-
-CvPoint3D32f cross(const CvPoint3D32f &a, const CvPoint3D32f &b) {
-	return cvPoint3D32f(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x);
-}
-
-float length(const CvPoint3D32f &p) {
-	return sqrt(dot(p, p));
-}
-
-CvPoint3D32f normalized(const CvPoint3D32f &p) {
-	float l = length(p);
-	return cvPoint3D32f(p.x / l, p.y / l, p.z / l);
-}
-
-CvPoint3D32f operator+(const CvPoint3D32f &a, const CvPoint3D32f &b) {
-	return cvPoint3D32f(a.x + b.x, a.y + b.y, a.z + b.z);
-}
-
-CvPoint3D32f operator-(const CvPoint3D32f &a, const CvPoint3D32f &b) {
-	return cvPoint3D32f(a.x - b.x, a.y - b.y, a.z - b.z);
-}
+using namespace cv;
+using namespace std;
 
 /**
  * Aufgabe: Vorüberlegungen (10 Punkte)
@@ -95,105 +68,165 @@ CvPoint3D32f operator-(const CvPoint3D32f &a, const CvPoint3D32f &b) {
  *
  * - Skizziere eine Draufsicht der beiden Hintergrundebenen.
  *
+ *
+ *             ^
+ *            /.\ <--- rechter Winkel!
+ *           /   \
+ *          /     \
+ *         /   x   \
+ *
+ *
+ *
+ *             ^
+ *             |
+ *          Kamera
+ *
  * - Beschreibe $z$ als Funktion von $x$ jeweils für die linke und rechte
  *   Bildhälfte. Diese Funktion wird später verwendet, um 3D-Koordinaten aus
  *   den 2D-Bildkoordinaten zu berechnen.
+ *
+ *
+ *   Rechte Bildhälfte:
+ *
+ *   z(x) = -x
+ *
+ *   Linke Bildhälfte:
+ *
+ *   z(x) = x
+ *
  */
 
-std::pair<CvPoint, CvPoint> find_line(IplImage *bimg) {
-	/**
-	 * Aufgabe: Kalibrierlinien (5 Punkte)
-	 *
-	 * Zunächst müssen im Eingabebild die beiden Kalibrierlinien gefunden
-	 * werden. Dafür wird das Bild binarisiert und in den linken und rechten
-	 * Teil separiert. Finde in einem solchen Binärbild die dominanteste Linie
-	 * und gib zwei Punkte zurück, die auf dieser Linie liegen.
-	 */
+pair<Point, Point> find_line(Mat img, int dx=0, int dy=0) {
+    vector<Vec2f> lines;
+    HoughLines(img, lines, 1, CV_PI/180, 40);
 
-/* TODO */
+    pair<Point, Point> p;
 
+    if (lines.size() > 0) {
+        float r = lines[0][0];
+        float alpha = lines[0][1];
+
+        float y = r/cos(alpha-CV_PI/2);
+        float x = -r/cos(CV_PI-alpha);
+
+        p.first = Point(x+dx, dy);
+        p.second = Point(dx, y+dy);
+    }
+
+    return p;
 }
 
 int main(int argc, char** argv) {
-	if (argc < 3 or argc > 4) {
-		std::cerr << "Usage: " << argv[0] << " infile.avi outfile.asc [frame_index_skip=1]" << std::endl;
-		return 1;
-	}
+    if (argc < 3 or argc > 4) {
+        std::cerr << "Usage: " << argv[0] << " infile.avi outfile.asc [frame_index_skip=1]" << std::endl;
+        return 1;
+    }
 
-	CvCapture *capture = cvCaptureFromFile(argv[1]);
-	std::ofstream outfile(argv[2]);
-	int frame_index_skip = argc > 3 ? atoi(argv[3]) : 1;
+    VideoCapture cap(argv[1]);
+    ofstream outfile(argv[2]);
+    int frame_index_skip = argc > 3 ? atoi(argv[3]) : 1;
 
-	/**
-	 * Aufgabe: Laserscanner (15 Punkte)
-	 *
-	 * Führe folgende Schritte für jeden Frame des Videos durch:
-	 */
-	for (int frame_index = 0; cvGrabFrame(capture); ++frame_index) {
-		if (frame_index % frame_index_skip != 0) continue;
-		std::cout << "processing frame " << frame_index << std::endl;
-		IplImage *img = cvRetrieveFrame(capture);
-		IplImage *gimg = cvCreateImage(cvGetSize(img), 8, 1);
-		cvSplit(img, gimg, NULL, NULL, NULL);
+    /**
+     * Aufgabe: Laserscanner (15 Punkte)
+     *
+     * Führe folgende Schritte für jeden Frame des Videos durch:
+     */
 
-		/**
-		 * - Binarisiere das Bild, so dass nur die Laserlinie erhalten bleibt.
-		 */
+    Mat frame;
+    Mat bin_frame;
+    int frame_index = 0;
+    while (true) {
+        cap >> frame;
+        frame_index++;
 
-/* TODO */
+        if (frame_index % frame_index_skip != 0) continue;
+        std::cout << "processing frame " << frame_index << std::endl;
 
+        Mat channels[3];
+        split(frame, channels);
 
-		/**
-		 * - Finde die Kalibrierlinie im linken Bild. Berechne die
-		 *   $z$-Koordinaten gemäß deiner theoretischen Überlegungen.
-		 */
+        /**
+         * - Binarisiere das Bild, so dass nur die Laserlinie erhalten bleibt.
+         */
 
-/* TODO */
+        threshold(channels[0], bin_frame, 40, 255, THRESH_BINARY);
 
+        Rect left_rect(0, 0, bin_frame.cols/2, bin_frame.rows/2);
+        Rect right_rect(frame.cols/2, 0, bin_frame.cols/2, bin_frame.rows/2);
+        Mat left = bin_frame(left_rect);
+        Mat right = bin_frame(right_rect);
 
-		/**
-		 * - Finde die Kalibrierlinie im rechten Bild. Berechne die
-		 *   $z$-Koordinaten gemäß deiner theoretischen Überlegungen. Beachte
-		 *   dabei, dass die von \code{find\_line} zurückgegebenen Koordinaten
-		 *   relativ zum Ursprung der rechten Bildhälfte sind.
-		 */
+        /**
+         * - Finde die Kalibrierlinie im linken Bild. Berechne die
+         *   $z$-Koordinaten gemäß deiner theoretischen Überlegungen.
+         */
 
-/* TODO */
+        pair<Point, Point> left_points = find_line(left, -frame.cols/2, -frame.rows/2);
 
+        /**
+         * - Finde die Kalibrierlinie im rechten Bild. Berechne die
+         *   $z$-Koordinaten gemäß deiner theoretischen Überlegungen. Beachte
+         *   dabei, dass die von \code{find\_line} zurückgegebenen Koordinaten
+         *   relativ zum Ursprung der rechten Bildhälfte sind.
+         */
 
-		/**
-		 * - Finde eine Ebene, die durch beide Kalibrierlinien geht. Für jeden
-		 *   Punkt $\vec{x}$ auf der Ebene soll gelten: $\vec{n} \cdot \vec{x}
-		 *   = d$.
-		 */
+        pair<Point, Point> right_points = find_line(right, 0, -frame.rows/2);
 
-/* TODO */
+        /**
+         * - Finde eine Ebene, die durch beide Kalibrierlinien geht. Für jeden
+         *   Punkt $\vec{x}$ auf der Ebene soll gelten: $\vec{n} \cdot \vec{x}
+         *   = d$.
+         */
 
+        if ((left_points.first.x == 0 && left_points.second.y == 0) ||
+                (right_points.first.x == 0 && right_points.second.y == 0)) {
+            // we didn't find two lines
+            continue;
+        }
 
-		/**
-		 * - Projiziere jeden hellen Punkt des Binärbildes auf die Ebene und
-		 *   schreibe die 3D-Koordinaten in der Form $x, y, z$ nach
-		 *   \code{outfile}. Da im OpenCV-Koordinatensystem $y$ nach unten hin
-		 *   wächst, solltest du die $y$-Koordinate invertieren, um die
-		 *   korrekte Darstellung im Renderer zu erreichen. Abhängig von der
-		 *   Wahl deines Koordinatensystems musst du möglicherweise auch $z$
-		 *   invertieren.
-		 */
+        Point3f p1(left_points.first.x, left_points.first.y, left_points.first.x);
+        Point3f p2(left_points.second.x, left_points.second.y, left_points.second.x);
+        Point3f p3(right_points.first.x, right_points.first.y, -right_points.first.x);
 
-/* TODO */
+        cout << "p1 " << p1 << endl;
+        cout << "p2 " << p2 << endl;
+        cout << "p3 " << p3 << endl;
 
+        Point3f n = (p1-p2).cross(p1-p3);
+        n = 1/(sqrt(n.x*n.x + n.y*n.y + n.z*n.z))*n;
 
-		cvReleaseImage(&bimg);
-		cvReleaseImage(&gimg);
+        cout << n << endl;
 
-		/**
-		 * - Stelle dein Ergebnis mit Meshlab dar. Entspricht das Ergebnis
-		 *   deinen Erwartungen? Warum?
-		 */
-	}
+        /**
+         * - Projiziere jeden hellen Punkt des Binärbildes auf die Ebene und
+         *   schreibe die 3D-Koordinaten in der Form $x, y, z$ nach
+         *   \code{outfile}. Da im OpenCV-Koordinatensystem $y$ nach unten hin
+         *   wächst, solltest du die $y$-Koordinate invertieren, um die
+         *   korrekte Darstellung im Renderer zu erreichen. Abhängig von der
+         *   Wahl deines Koordinatensystems musst du möglicherweise auch $z$
+         *   invertieren.
+         */
 
-	cvReleaseCapture(&capture);
+        for (int x = 0; x < frame.cols; x++) {
+            for (int y = 0; y < frame.rows; y++) {
+                if (bin_frame.at<int>(Point(x,y)) > 0) {
+                    Point3f l(0, 0, 1);
+                    Point3f l0(x-frame.cols/2, y-frame.rows/2, 0);
 
-	return 0;
+                    int z = (p1 - l0).dot(n)/(l.dot(n));
+
+                    Point3f p(x-frame.cols/2, y-frame.rows/2, z);
+                    outfile << p.x << " " << -p.y << " " << p.z << endl;
+                }
+            }
+        }
+
+        /**
+         * - Stelle dein Ergebnis mit Meshlab dar. Entspricht das Ergebnis
+         *   deinen Erwartungen? Warum?
+         */
+    }
+
+    return 0;
 }
 
