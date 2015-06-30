@@ -98,7 +98,7 @@ using namespace std;
 
 pair<Point, Point> find_line(Mat img, int dx=0, int dy=0) {
     vector<Vec2f> lines;
-    HoughLines(img, lines, 1, CV_PI/180, 40);
+    HoughLines(img, lines, 1, CV_PI/180, 5);
 
     pair<Point, Point> p;
 
@@ -135,8 +135,7 @@ int main(int argc, char** argv) {
     Mat frame;
     Mat bin_frame;
     int frame_index = 0;
-    while (true) {
-        cap >> frame;
+    while (cap.read(frame)) {
         frame_index++;
 
         if (frame_index % frame_index_skip != 0) continue;
@@ -181,6 +180,7 @@ int main(int argc, char** argv) {
         if ((left_points.first.x == 0 && left_points.second.y == 0) ||
                 (right_points.first.x == 0 && right_points.second.y == 0)) {
             // we didn't find two lines
+            cout << "no lines found" << endl;
             continue;
         }
 
@@ -188,14 +188,8 @@ int main(int argc, char** argv) {
         Point3f p2(left_points.second.x, left_points.second.y, left_points.second.x);
         Point3f p3(right_points.first.x, right_points.first.y, -right_points.first.x);
 
-        cout << "p1 " << p1 << endl;
-        cout << "p2 " << p2 << endl;
-        cout << "p3 " << p3 << endl;
-
         Point3f n = (p1-p2).cross(p1-p3);
-        n = 1/(sqrt(n.x*n.x + n.y*n.y + n.z*n.z))*n;
-
-        cout << n << endl;
+        n = 1.0/(sqrt(n.x*n.x + n.y*n.y + n.z*n.z))*n;
 
         /**
          * - Projiziere jeden hellen Punkt des Binärbildes auf die Ebene und
@@ -209,7 +203,7 @@ int main(int argc, char** argv) {
 
         for (int x = 0; x < frame.cols; x++) {
             for (int y = 0; y < frame.rows; y++) {
-                if (bin_frame.at<int>(Point(x,y)) > 0) {
+                if (bin_frame.at<unsigned char>(Point(x,y)) > 0) {
                     Point3f l(0, 0, 1);
                     Point3f l0(x-frame.cols/2, y-frame.rows/2, 0);
 

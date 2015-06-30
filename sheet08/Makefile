@@ -5,7 +5,7 @@ CXX_LIBS=-lglut -lGLU -lpthread -lopencv_highgui -lopencv_core -lopencv_legacy -
 .PHONY: all clean
 
 all: $(APP)
-	./exercise08 laserscan.avi points.txt 100
+	./exercise08 laserscan.avi points.txt 20
 
 %: %.cpp
 	$(CXX) $^ $(CXX_LIBS) -o $@
