@@ -1,0 +1,590 @@
+01 - Image Acquisition
+======================
+
+- Wellenoptik
+    - r/g = x/f
+        x: pixel
+        f abstand loch - bildebene
+        g abstand objekt
+        r abweichung objekt
+- TODO Folie 8-41
+- Three kinds of noise:
+    - Photon Noise: Wenn es dunkel genug ist, kommt mal ein Elektron, und mal keins
+        - vor allem bei hellen Lichtverhältnissen relevant
+        - Gegenmaßnahme: Größere Pixel
+    - Wärmerauschen: Heben von Elektronen ins Leitungsband durch Wärme
+    - Readout Noise: Vom Chip, Rauschuntergrund unabhängig vom Lichteinfall
+        - vor allem bei niedrigen Lichtverhältnissen relevant
+        - Gegenmaßnahme: Guter Sensor, oder seltener auslesen
+- Signal-to-Noise Ratio
+    - (Formel)
+- Photonenstatistik
+    - Photonen fallen Poisson-verteilt auf den Sensor
+- Weitere Effekte
+    - Motion Blur
+    - Interlacing
+- Korrekturverfahren
+    - Vignetting (Abdunklung durch die Optik) ausgleichen durch negativ Bild, das z.B. den Rand heller macht
+    - Readout noise: Bild mit kurzer Belichtungszeit machen, das als negativ verwenden
+    - Thermal noise?: Bilder mit abgedecktem Objektiv liefert Statistik, wie stark jeder Pixel rauscht
+- Bildkodierung
+    - Lossless vs lossy compression
+
+02 - Natural Images
+===================
+
+- Natural Image Statistics
+    - Erster Ordnung: Pixel einzeln betrachten
+        - Histogramm
+            - die Verteilung der log(intensity) ist bei natürlichen Bildern oft symmetrisch
+        - Kontrast
+            - Kontrastverbesserung durch normalisieren des kumulativen Histograms
+        - Momente berechnen (Formel)
+            - misst die "Gaussheit"
+            - k=0: Anzahl
+            - k=1: Mittelwert
+            - k=2: Varianz
+            - k=3: Skewness (Asymmetrie)
+                - bei glossy Oberflächen
+            - k=4: Kurtosis (Peakness)
+        - Nachteil: Keine räumliche Information
+    - Zweiter Ordnung: Beziehung zwischen Nachbarpixeln betrachten (Gradienten)
+        - Gradient ist meistens nahe 0 -> einfarbige Flächen
+        - Pearson Correlation misst lineare Abhängigkeit von Verteilungen?
+            - Zwischen 1 (identisch), 0 (tritt auf bei fehlender Korrelation) und -1 (inverse Verteilung)
+            - in natürlichen Bildern oft 0.8 und 0.95 zwischen benachbarten Pixeln
+            - auch Korrelation bei Pixeln, die weiter voneinander entfernt sind!
+        - Anisotropische Diffusion?
+        - Fourier Transformation -> Power Spectrum (quadrierter Betrag)
+        - Autokorrelations-Funktion
+            - räumlich: Convolution
+            - Frequenzraum: Multiplikation mit complexer Konjugierten: R(u,v) = F(u,v)*F(u,v)^*
+            - ganz viel Schmu mit power spektren (um Folie 36)
+                - die Slope ist um 2
+                - und (natürlich) horizontale und vertikale Linien sind stärker ausgeprägt
+                - über diese Ausprägung kann man auch natürliche und menschengemachte Szenen unterscheiden
+    - Higher Order: Pixelblöcke, zB 3x3
+        - Topologie der kontrastreichsten Blöcke ist eine kleinsche Flasche!
+        - Phaseninformationen in der FT enthalten die wesentlichen Informationen des Bildes
+        - Wavelet Transformation
+            - Haar Wavelet: gut komprimierbar
+            - Gabor Wavelet: Ähnlich zur Funktionsweise des Hirns
+
+03 - Image Processing
+=====================
+
+- Biologie
+    - Netzhaut/Hirn macht Kantenerkennung für verschiedene Richtungen
+    - Optische Nerven kreuzen sich, sodass im Hirn die rechte und linke Seite des Blickfeldes "Lateralisiert" werden können
+    - Retina wird auf die Oberfläche des visuellen Kortex gemappt
+    - Verschiedene Pathways im Kortex
+- Spatial Filtering
+    - convolution mit 3x3 filter kernel
+        - summe der kernelwerte: 1
+    - Tiefpassfilter
+        - entfernt noise -> smoothing
+        - Typen
+            - mean (zB 1/9 * (3x3 mit Einsen))
+            - gauß
+            - median
+                - keine convolution!
+                - pixel nach wert ordnen, median nehmen
+                - nichtlinear
+                - gut für unvollständige Bilder, und binärnoise (zB photon noise)
+                - MAGGI!!!!!!!!!!!!!!!!!!!!1
+                - MAGGI!!!!!!!!!!!!!!!!!!!!1
+                - MAGGI!!!!!!!!!!!!!!!!!!!!1
+                - MAGGI!!!!!!!!!!!!!!!!!!!!1
+    - Hochpassfilter
+        - zB 1/9 * (3x3 mit -1 und 8 in der Mitte)
+        - summe der kernelwerte: 0
+        - verstärkt noise
+        - derivative filters zur Gradientenerkennung
+            sobel operator [-1 -2 -1, 0 0 0, 1 2 1] ist Ableitung nach y
+        - stabiler: vorher tiefpassfiltern. bzw den kernel gaußfiltern
+        - zweiter ableitung: [-1 2 -1] bzw [0 -1 0, -1 4 -1, 0 -1 0]
+            - oder marr-hildreth operator ("mexican hat")
+                - sharp gaussian - wide gaussian
+                - symmetrisch -> in alle richtungen gleich
+                - geschlossene konturen
+                - funzt mit blurry edges
+                - noise unterdrückung
+                - zu viele kanten
+             - findet zero-crossings
+         - canny edge detector
+            - wie gehts?
+            - doppelkanten für schmale linien
+        - probleme
+            - kanten des bildes
+            - dünne linien werden verdoppelt
+            - manuelles parameter fiddling
+- hough filter
+    - für jeden pixel des kantenbildes im 2D parameter space alle pixel erhöhen, dessen linien durch den pixel führen könnten
+- feature point detection
+    - harris corner detector
+        - fenster suchen, die sich beim verschieben genug ändern
+- point feature corresponcdence matching
+    - block-based
+    - sum-of-squared-error
+    - sum-of-squared-difference
+        - beide anfällig gegen helligkeitsunterschiede
+    - normalized cross-correlation
+        - gut!
+    - SIFT feature detector
+        - unabhängig von verdeckung, rotation, skalierung, beleuchtung, noise
+        - Funktionsweise?
+- probleme: rauschen, tiefenunschärfe
+
+04 - Projective Transformation
+==============================
+
+- Kameramodelle
+    - perspektivische Projektion (Pinhole)
+        - x = f*r/g
+            x: Abstand x in der Bildebene (Koordinate)
+            f: Abstand der Bildebene vom Loch (fokale Länge)
+            r: Abstand des Punktes von der Mittelachse
+            g: Abstand des Punktes vom Loch
+        - Eigenschaften
+            - Geraden -> Geraden
+            - bei Ebenen parallel zur Bildebene -> gleiche Winkel
+            - doppelter Abstand -> halbe Größe
+            - doppelte fokale Länge -> verdoppelte Größe
+            - Verschiebung parallel zur Bildebene -> Verschiebung
+    - parallele Projektion
+        - wie bei starken tele-lenses
+- 3D auf 2D Projektion
+    - x' = f*x/z
+    - y' = f*y/z
+- Homogeneous coordinates
+    - good for relating points and lines
+    - für 2D: Dritte Koordinate hinzufügen
+        - (x y) -> (x y 1)
+        - (x y w) -> (x/w y/w)
+    - erlaubt vor allem Translation durch 3x3-Matrix darzustellen
+    - Geradendarstellung:
+        - (a b c) als Normale auf der Ebene, die durch den Ursprung und der Geraden, um 1 in z verschoben
+            - Gerade erfüllt dann ax + by + c = 0
+    - Test, ob Punkt auf Linie liegt: x*l = 0, wobei l = (a b c), x = (x y w)
+    - Schnittpunkt von Linien
+        - l' cross l = x wobei x Schnittpunkt
+    - Linie durch zwei Punkte
+        - x' cross x = l
+- Projektive Transformation
+    - Punkt auf einer Ebene auf eine andere projizieren, hinsichtlich eines Projektionszentrums
+- Homography
+    - central projection of one plane onto another
+    - Taxonomie:
+        - euclidean (3 dof)
+            - rotation und translation in x und y
+        - similarity (4 dof)
+            - + skalierung
+        - affine (6 dof)
+            - + scherung in x und y
+            - parallele linien bleiben es
+            - Matrix H = [a b tx, c d ty, 0 0 1]
+            - man braucht 3 Punktkorrespondenzen
+            - Lösen
+                - man weiß H*p1 = p1' etc
+                - umstellen nach x'en und y'en, dann lösbar nach je drei Variablen
+
+        - projective (8 dof)
+            - stauchen in x und y
+            - man braucht 4 linear unabhängige Punktkorrespondenzen
+- Projektive lösen
+    - Normalisierung von x
+    - und x'
+    - DLT
+        - determines projective homography matrix from point matches
+        - (TODO Folie 21 und 22)
+    - Denormalisieren
+- Panoramas bauen
+    - Feature Punkte finden
+    - Featurekorrespondenzen
+    - Falsche Korrespondenzen finden: RANSAC
+        - benögtigt: vieeeele Korrespondenzen
+            - man benötigt zB 20-40, man kann das schätzen
+        - iteriert, bis irgendwas nicht mehr besser wird... (Folie 30)
+    - auch über die "guten" Korrespondenzen muss man dann noch H optimieren (mit Gauss-Newton, Seite 34, wichtig?)
+        - oder noch toller: Levenberg-Marquardt-Iteration
+
+05 - Geometry from images
+=========================
+
+- Bestandteile von Bildformationen
+    - 3D-Geometrie
+    - Textur
+    - BRDF
+    - Illumination
+- Kamerakalibrierung
+    - extrinsische (6)
+        - Position des Projektionszentrums
+        - Richtung der optischen Achse
+        - Rotation um die Achse
+    - intrinsische
+        - Focal length
+        - Pixel width & height
+        - image plane shift
+- Perspektive Projektion
+    - hoomogene Formulierung: [s*x, s*y, s] = [f 0 0 0, 0 f 0 0, 0 0 1 0] * [X, Y, Z, 1]
+    - von Abständen zu Pixeln:
+        - u = u_c + x/pixel_width, entsprechen für v und y
+        - Matrixschreibweise: [s*u, s*v, s] = [f/pw 0 u_c 0, 0 f/ph v_c 0, 0 0 1 0]*[X, Y, Z, 1] = P * M~
+- Kameramatrix K = [a b c t_x, d e f t_y, g h i t_z, 0 0 0 1] enthält Translation und Rotation der Kamera (6 dof)
+- Welt-zu-Kamera: Kamera-Kalibrations-Matrix C = P*K
+    - die wollen wir schätzen! 11 dof, einer kann normiert werden
+    - brauchen 6 Punktkorrespondenzen
+        - zB mit Kalibrierkörper (wie genau? Folie 11-15 )
+- Stereo-Rekonstruktion
+    - zwei Kameras kallibiert: Punkt mit unbekanntem Abstand erzeugt in anderer Kamera Epipolarlinie
+    - Kamera-baseline schneidet die Bildebene bei den Epipolen, dort gehen alle Epipolarlinien durch
+    - Punkt kann dann durchs Schneiden der Strahlen rekonstruiert werden
+    - nun: Nur Punktkorrespondenzen bekannt
+        - x' = H_pi * x
+        - l' = e' cross x' ist die Epiloarlinie auf dem zweiten Bild
+        - dann gilt l' = e' cross H_pi * x = F * x (F Fundamentalmatrix)
+            - die Fundamentalmatrix F mappt Punkte auf ihre Epipolarlinien im anderen Bild
+        - und x'^T * F * x = 0
+        - für die Epipole gilt: e'^T * F = 0, und F*e = 0
+        - mit einigen Punktpaaren kann man dann nach F lösen ^^
+        - gut: bei der Berechnung auf 1 normieren
+    - wenn Kameramatrizen C und C' bekannt
+        - C * [X,Y,Z,1] = [s*u, s*v, s] und entsprechend für C'. Leicht lösbar.
+- Bilder rektifizieren
+    - beide Bilder auf große Leinwand projezieren (von den Projektionszentren aus), dann Homographie auf gemeinsame Bildebene
+    - dann laufen die Epipolarlinien parallel
+    - Nachteil: Resampeln nötig
+    - Disparität d = x_links - x_rechts = f*b/z
+- Matching
+    - besten nxn-Block suchen
+    - Constraints:
+        - Reihenfolge des Auftauchens bleibt erhalten
+        - Uniqueness: Korrespondenz der Punkte ist bidirektional
+        - Disparität innerhalb eines Bereiches
+        - Kontinuierlichkeit der Disparität
+- (Einiges von M übersprungen um 48 herum)
+- Mergen von Tiefenkarten
+    - Iterative Closest Point Algorithm
+        - fügt zwei 3D-Oberflächen zusammen durch iteratives Verfahren
+    - Volumetric Depth Map Merging
+        - voxel wegschneiden aus verschiedenen Perspektiven
+- Shape-from-silhouette
+    - siluetten aus verschiedenen Perspektiven schneiden -> Konvexe hülle des Objektes
+    - schnell
+- Space carving
+    - zusammenpassende Farbwerte betrachten
+    - iterativ, langsam
+    - robust
+    - keine Bildsegmentierung notwendig
+    - robust gegen ungenaue Kalibierung
+
+06 - Shape from X
+=================
+
+- Binocular vision
+    - Konvergenz ("schielen")
+    - Stereo
+- Monocular vision
+    - Fokus
+    - Perspektive
+    - Textur
+    - Schattierung
+    - Konturen
+    - 3D-Regeln
+    - Parallaxe
+- Shape from X (except stereo)
+    - Texture
+        - nutzt Verformung von Texturprimitiven
+    - Focus
+        - scharfe Bereiche suchen (zB Wavelet-Analyse oder Hochpassfilter)
+    - Shading
+        - Reflectance Map: Pixelintensität als Funktion der Oberflächenorientierung des Punktes
+            - bei lambertschen Oberflächen: Reflektanz proportional zum Winkel zwischen Normale und Lichteinfallrichtung
+            - auch bei nichtlambertschen kann man das in die RM reinnehmen
+        - Photometric stereo
+            - Objekt bei drei Beleuchtungen aufnehmen
+            - Jede definiert eine Ellipse auf der 2D-Winkel-Karte
+            - drei davon schneiden sich in einem Punkt
+            - mathematisch
+                - E(x,y) = rho * R(p,q)
+                    (Image irradiance = surface albedo (weißheit) mal angenommene reflectance map)
+                - E1 = rho * s * n
+                    (s: Lichtrichtung, n: Normale)
+                - E = rho * S * n
+                    (E: Vektor von irradiances, S: Matrix von drei Richtungen)
+                - rho * n = S^-1 * E
+                - Drei Unbekannte, lösen
+        - schöner wäre: Nur aus einer Aufnahme
+            - Unterbestimmtes Problem
+            - TODO: Formeln (Folie 37-
+            - Smoothness constraint: Objekte sind abschnittsweise smooth
+            - gleiche reflektanz für ganzes Objekt
+                - aber: Reflektanz und Licht nicht immer vollständig bekannt
+                - Trick: Fluoreszenz ist sehr diffus
+- Tomography
+    - Volumen statt Oberfläche
+    - Objekt muss semi-transparent sein (keine Streuung oder Reflektion)
+    - Radon Tranform
+        - Röntgenstrahl wird abgeschwächt, verbleibende Stärke wird registriert
+            - Wert ist Integral der Abschwächung
+        - TODO Formel Folie 43
+        - TODO Fourier Slice Theorem Folie 44
+        - Vorgehensweise: Objekt in verschiedenen Winkeln durchleuchten, Resultate Fourier-transformieren
+            - Resultat ist in der Mitte dichter
+        - TODO Folien 46, 47
+        - Nachteile
+            - Bilder müssen sehr regelmäßig aufgenommen werden
+            - Drehachse darf sich nicht verschieben
+            - Röntenquelle ist Punktlichtquelle, keine parallelen Strahlen
+    - Algebraic reconstruction
+        - Volumen in Grid diskretisieren
+        - Jeder Strahl macht ein Gleichungssystem der Form (Anteil von voxel an Strahl)*Intensität + ... + ... = Messwert
+        - Lösen: TODO? Folie 50
+
+07 - Reflectance
+================
+
+- Surfaces
+    - matt, glossy, mirror
+    - anisotopisch: Drehrichtung ist wichtig (gebürstetes Metall zB)
+    - transparent
+    - transluzent
+    - volumetrische Strukturen
+- Taxonomy of appereance representations
+    - gloss (1D/0D)
+    - isotropic BRDF (3D)
+    - (anisotropic) BRDF (4D)
+        - spatially varying BRDF (6D) (nicht überall gleiche BRDF)
+        - bidirectional subsurface scattering RDF (BSSRDF) (6D)
+    - single-wavelength scattering function (BSSRDF) (8D)
+    - scattering function (ganzes Spektrum betrachten) (9D)
+    - zeiteigenschaften, fluoreszenz (12D)
+- BRDF
+    - f(omega_o, x, omega_i)
+        x ist der Punkt, o und i die in und out Richtungen des Lichts
+    - Darstellungen
+        - Tabelle
+        - zwei 2D-Funktionen draus machen
+        - Basisfunktionen zB Wavelets
+        - analytische Modelle machen CGler gerne
+    - physikalisch
+        - Helmholtz reciprocity: Quelle und Beobachter sind austauschbar
+        - Energieerhaltung: Integral über Halbkugel muss <= 1 sein
+        - Snell's Law (20)
+            - normale Reflektion und Brechung
+            TODO
+        - Fresnel Formula (21)
+            TODO
+    - cook torrance
+        - Physikalisch basiert
+        - Blickrichtung v
+        - Lichtrichtung l
+        - halfway vector h = (l+v)/|l+v|
+        - L = sum über lichtquellen von
+            L_i * f(l_i, v) * (n*l_i)
+            f(l,v) = k_d/pi + k_s*rho_s
+                k_d und k_s sind diffuser/spekularer anteil, summe <= 1
+            TODO? genaue Formeln ~Folie 27
+    - ward
+        - empirisch
+        - loooooool TODO? 31
+    - lafortune
+        - empirisch
+        - formeln TODO? 33
+        - f(u,v) = rho_d + sum_i (C_x,i(ux*vx + uy*vy) + C_z,i * uz * vz
+- BRDF measurement system
+    - Digitizing
+        - 3D
+        - 3D + Textur
+            - keine Neubeleuchtung möglich
+        - 3D + Textur + varying BRDF
+    - also Ziel: Reflektionseigenschaften jedes Texels messen
+    - viele Fotos mit unterschiedlicher, bekannter Beleuchtung
+    - Setup: 3D scanner, Kamera, Punktlichtquelle, dunkler Raum, Kalibrierkörper (Schachbrett, Kugeln)
+    - Oberfläche in flachgedrückte patches zerlegen (Texturatlas)
+    - passende 3D-Blickrichtung finden über Umriss
+    - Kugeln verraten Position der Kamera (Blitz) und der Punktlichtquelle
+    - Lumitexel sammeln: Position, Normale, sample mit radianz, lichtrichtung, blickrichtung
+    - Lafortune schätzen
+        - 12 parameter für eine lobe
+        - parameter an samples fitten
+    - erstmal ein model schätzen -> eine oberflächeneigenschaft
+    - dann clustern mit lloyd iteration: BRDF in zwei splitten, reclustern, fitten
+    - da kann man dann noch linearkombinationen zwischen suchen
+
+08 - Photometric Information
+============================
+
+- Ziel: Farbe, Textur, Reflektionseigenschaften erkennen
+- Special Purpose Tools
+    - Spektrophotometer
+        - Prisma mit Aufnahmeeinheit dahinter
+    - Glossmeter
+    - ... wolln wir nicht. Wir wollen nur Kameras benutzen!
+- General Tools (Kamera)
+    - massiv parallel
+    - aber oft optimiert auf menschlichen Betrachter
+    - ideale Kamera
+        - hohe Auflösung, Farbtiefe, Range,
+        - keine Verzerrung
+        - nicht lossy, gute Optik
+        - flexibel, vielfältig, leicht, blurb
+        - schlechte Annahme: Pinhole
+        - realistischeres Modell: Blackbox, die ein Bild liefert
+            - antialiasing, Filter, nachbearbeitung, optische Linsen machen Quatsch, Rauschen, fehlerhafter Chip
+            - Bayer pattern
+                - muss interpoliert werden
+- Modulation Transfer Function
+    - beschreibe die Eigenschaften des optischen Systems im Frequenzraum
+    - Point Spread Function (Bild einer Punktlichtquelle)
+    - MTF (FT der PSF)
+        - misst wie stark image detail contrast vom System wiedergegeben wird
+    - Line Spread Function (1D slice der MTF)
+    - MTF von lossless (warum Nyquist?) Folie 18
+    - MTF measurement: Slanted Edge Method
+        - low-contrast schräge Kante aufnehmen
+        - Linie auf Kante fitten
+        - aufgenommenes Bild auf senkrechte zu kante projizieren
+        - FT des Profils -> MTF
+    - bei Frequenzen über Nyquist: Aliasing
+    - Bild: Von 1 auf ~ 0 bei 0.5 cycles/pixel (Folie 21)
+        - darunter blurring, darüber sharpening. Rechts von Nyquist aliasing
+    - Effektive Auflösung dort, wo die MTF unter 0.1 fällt
+- Camera Response Curve
+    - Opto-electronic conversion function beschreibt zusammenhang von messwert und luminanz (oft nichtlinear)
+    - Messung mit test chart
+- HDR
+    - dynamic range: Verhältnis von hellstem zu dunkelstem (nicht-null) wert
+        1:100000 oder 5 größenordnungen oder 100 dB
+    - Quellen: Helligkeitsunterschiede spekulare highlights vs dunkle diffuse materialien (0.5% reflektanz)
+    - standard CCD sensor ca 1:100,000,000 (mit mehreren Bildern)
+    - ein Bild: 1:1000
+    - daher Grundverfahren: mehrere Bilder mit Response curves gewichtet kombinieren -> HDR Bild
+    - Verfahren
+        - Robertson
+            - TODO (Folie 40-51)
+            - Einfach
+            - Keine Annahmen über response curve
+            - konvergiert schnell
+            - benutzt alle vorhandenen Bilder
+            - auch >8 bit
+            - manche Szenen gehen nicht gut (zB wenige monochrome Farbflächen)
+    - Anzahl Bilder? Faktor 4 zwischen Exposures oft ausreichend
+    - für verwackelte Bilder: Median Threshold Bitmap
+        - Histogramm, medians suchen, rechts und links binarisieren
+        - erlaubt mappen von Bildern aufeinander
+    - für bewegte Bilder
+        - andere Hardware (in der Optik oder im Chip)
+        - multiple time steps
+    - HDR auf dem Bildschirm darstellen?
+        - tone-mapping zum komprimieren des dynamischen bereichs
+        - hacks
+            - intensity scalieren
+            - gamma korrektur (irgendwas mit log)
+- White balancing
+    - Annahmen über Spektrogramm der Lichtquelle
+- ICC Profile
+    - für Kameras, Monitore, Drucker
+- Lighting and environment
+    - wo kommt das Licht her?
+    - viel blaaaaaa
+    - Halogenlampen machen gutes Spektrum, sind fast Punktlichtquellen
+    - Umgebung: Dunkel -.-
+
+09 - Image-based rendering
+==========================
+
+- Ziel: Dinge aus anderen Perspektiven rendern
+    - Man kann die Bilder *berechnen*
+    - oder *nachschlagen*
+- Plenoptische Funktion
+    - 7D-Funktion die die radiance in Abhängigkeit der Wellenlänge, des Ortes, unter betrachtungswinkel zu einem Zeitpunkt
+    - Herausforderungen:
+        - Aufnahme
+            - continuierlich -> Diskretisierung
+            - hochdimensional -> Reduktion
+                - Zeit und Wellenlänge raus -> 5D
+                - transparenter Raum, muss geschickt parametrisiert werden -> 4D
+                - z-Achse weg (Concentric Mosaics) -> 3D
+                - fixierter Viewpoint (Panoramas) -> 2D
+        - Rendering
+            - continuierlich -> look up
+            - diskretisierte Daten -> re-sample/interpolate
+- Pure IBR
+    - Panoramas
+        - Projezierung auf Kugel
+            - Flächen bleiben regelmäßig
+            - Aber: viel Resampling
+        - Zylinder
+            - einfache Abfrage
+            - vertikale Views nicht darstellbar
+        - Würfel
+            - einfach, alle Richtungen
+            - Distortion an den Kanten?
+    - Concentric Mosaics
+        - viewpoint auf fester Ebene
+        - rotierender Balken, mehrere Kameras darauf machen Aufnahmen
+        - Für jeden Ring ein Panorama
+        - für neuen Punkt: Für alle Richtungen beste Tangenten an Ringen suchen, Panorama zusammensetzen
+    - Light Field Rendering
+        - volle Parallaxe in alle Richtungen
+        - für eine Aufnahmeebene: Grid von Fotos
+        - für neue Blickrichtung: Beste Strahlen der alten Bilder finden, dann optional noch interpolieren
+    - Bedingungen bei der Bildaufnahme TODO Folie 32
+        - zu viele Bilder nötig, nicht praktikabel
+            - deshalb Geometrie mit rein
+            - zB voxel modell, damit dann zwischenbilder erzeugen
+- Geometry + IBR
+    - Lumigraph
+        - wieder Grid von Aufnahmen mit Tiefenkarten
+        - für neuen Strahl beste Oberflächenpunkte finden
+        - parallax ist drin
+        - reduziertes aliasing
+        - verdeckte Regionen trotzdem ein Problem
+    - View Morping
+        - Kamera zwischen echten Aufnahmen hin- und herbewegen können
+    - View-dependent Texture mapping
+        - Fotos + exakte Geometrie
+    - Surface Light Fields
+        - auch Fotos + exakte Geometrie??
+        - irgendwas mit Lumispheres TODO Folie 66
+
+10 - Motion
+===========
+
+- 2D motion
+    - korrespondenz-problem
+        - bei seitlicher Kamerabewegung: 1D-Suche
+        - probleme: überdeckung, entdeckung, beleuchtungsänderungen
+        - viele Anwendungen
+    - motion field
+        - 2D-projektion des scene flows
+    - Optical Flow
+        - aproximation des motion fields
+        - annahmen
+            - helligkeit bleibt gleich
+            - bewegung ist "klein" (oft <1 pixel)
+        - TODO taylor berechnung Folien 9-15
+        - bewegung entlang des Gradienten kann nicht erkannt werden (aperture problem)
+        - probleme, wenn die annahmen nicht zutreffen
+            - TODO lösen Folien 17-23
+            - wenn bewegung mehr als 1 pixel: Multi-resolution approach
+        - bei globaler affinen abbildung braucht man nur wenige parameter
+            - TODO formeln 26-27
+        - noch mehr Probleme: temporale effekte (cartwheel)
+        - beschränkungen
+            - verdeckung, beleuchtungseffekte, bla
+- 3D motion
+    - scene flow
+        - wahre korrespondenzen in 3D
+    - spacetime coherence
+        - glatte bewegungen über die zeit aus einzelbildern
+        - TODO 36-39
+        - visuelle hülle? TODO 40
+            - daraus glatte spacetime-coherent reconstruction
+- perception-based interpolation
+    - ziel: interpolation zwischen unkalibrierten bildern mit ähnlichen inhalten
+    - verfahren
+        - starke kanten suchen, dann farbdiffusion von denen aus
+        - kantenpixel zuordnen, dann warping berechnen
+        - voll tolle erbnisse -.-
