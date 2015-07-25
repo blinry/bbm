@@ -1,123 +1,73 @@
-01 - Image Acquisition
-======================
-
-- Wellenoptik
-    - r/g = x/f
-        x: pixel
-        f abstand loch - bildebene
-        g abstand objekt
-        r abweichung objekt
-- TODO Folie 8-41
-- Three kinds of noise:
-    - Photon Noise: Wenn es dunkel genug ist, kommt mal ein Elektron, und mal keins
-        - vor allem bei hellen Lichtverhältnissen relevant
-        - Gegenmaßnahme: Größere Pixel
-    - Wärmerauschen: Heben von Elektronen ins Leitungsband durch Wärme
-    - Readout Noise: Vom Chip, Rauschuntergrund unabhängig vom Lichteinfall
-        - vor allem bei niedrigen Lichtverhältnissen relevant
-        - Gegenmaßnahme: Guter Sensor, oder seltener auslesen
-- Signal-to-Noise Ratio
-    - TODO (Formel)
-- Photonenstatistik
-    - Photonen fallen Poisson-verteilt auf den Sensor
-- Weitere Effekte
-    - Motion Blur
-    - Interlacing
-- Korrekturverfahren
-    - Vignetting (Abdunklung durch die Optik) ausgleichen durch negativ Bild, das z.B. den Rand heller macht
-    - Readout noise: Bild mit kurzer Belichtungszeit machen, das als negativ verwenden
-    - Thermal noise?: Bilder mit abgedecktem Objektiv liefert Statistik, wie stark jeder Pixel rauscht
-- Bildkodierung
-    - Lossless vs lossy compression
-
 02 - Natural Images
 ===================
 
-- Erster Ordnung: Pixel einzeln betrachten
-    - Histogramm
-        - die Verteilung der log(intensity) ist bei natürlichen Bildern oft symmetrisch
-    - Kontrast
-        - Kontrastverbesserung durch normalisieren des kumulativen Histograms
-    - Momente berechnen (Formel)
-        - misst die "Gaussheit"
-        - k=0: Anzahl
-        - k=1: Mittelwert
-        - k=2: Varianz
-        - k=3: Skewness (Asymmetrie)
-            - bei glossy Oberflächen
-        - k=4: Kurtosis (Peakness)
-    - Nachteil: Keine räumliche Information
++ Erster Ordnung: Pixel einzeln betrachten
+    + Histogramm
+        + die Verteilung der log(intensity) ist bei natürlichen Bildern oft symmetrisch
+    + Kontrast
+        + Kontrastverbesserung durch normalisieren des kumulativen Histograms
+    + Momente berechnen (Formel)
+        + misst die "Gaussheit"
+        + k=0: Anzahl
+        + k=1: Mittelwert
+        + k=2: Varianz
+        + k=3: Skewness (Asymmetrie)
+            + bei glossy Oberflächen
+        + k=4: Kurtosis (Peakness)
+    + Nachteil: Keine räumliche Information
 - Zweiter Ordnung: Beziehung zwischen Nachbarpixeln betrachten (Gradienten)
-    - Gradient ist meistens nahe 0 -> einfarbige Flächen
-    - Pearson Correlation misst lineare Abhängigkeit von Verteilungen?
-        - Zwischen 1 (identisch), 0 (tritt auf bei fehlender Korrelation) und -1 (inverse Verteilung)
-        - in natürlichen Bildern oft 0.8 und 0.95 zwischen benachbarten Pixeln
-        - auch Korrelation bei Pixeln, die weiter voneinander entfernt sind!
-    - Anisotropische Diffusion?
-    - Fourier Transformation -> Power Spectrum (quadrierter Betrag)
-    - Autokorrelations-Funktion
-        - räumlich: Convolution
-        - Frequenzraum: Multiplikation mit complexer Konjugierten: R(u,v) = (F(u,v)*F(u,v))^*
-        - ganz viel Schmu mit power spektren (um Folie 36)
-            - die Slope ist um 2
-            - und (natürlich) horizontale und vertikale Linien sind stärker ausgeprägt
-            - über diese Ausprägung kann man auch natürliche und menschengemachte Szenen unterscheiden
-- Higher Order: Pixelblöcke, zB 3x3
-    - Topologie der kontrastreichsten Blöcke ist eine kleinsche Flasche!
-    - Phaseninformationen in der FT enthalten die wesentlichen Informationen des Bildes
-    - Wavelet Transformation
-        - Haar Wavelet: gut komprimierbar
-        - Gabor Wavelet: Ähnlich zur Funktionsweise des Hirns
+    + Gradient ist meistens nahe 0 -> einfarbige Flächen
+    + Pearson Correlation misst lineare Abhängigkeit von Verteilungen?
+        + Zwischen 1 (identisch), 0 (tritt auf bei fehlender Korrelation) und -1 (inverse Verteilung)
+        + in natürlichen Bildern oft 0.8 und 0.95 zwischen benachbarten Pixeln
+        + auch Korrelation bei Pixeln, die weiter voneinander entfernt sind!
++ Higher Order: Pixelblöcke, zB 3x3
+    + Topologie der kontrastreichsten Blöcke ist eine kleinsche Flasche!
+    + Phaseninformationen in der FT enthalten die wesentlichen Informationen des Bildes
+    + Wavelet Transformation erlaubt Kompression, Kantenerkennung, Frequenzbetrachtungen
 
 03 - Image Processing
 =====================
 
-- Biologie
-    - Netzhaut/Hirn macht Kantenerkennung für verschiedene Richtungen
-    - Optische Nerven kreuzen sich, sodass im Hirn die rechte und linke Seite des Blickfeldes "Lateralisiert" werden können
-    - Retina wird auf die Oberfläche des visuellen Kortex gemappt
-    - Verschiedene Pathways im Kortex
-- Spatial Filtering
-    - convolution mit 3x3 filter kernel
-        - summe der kernelwerte: 1
-    - Tiefpassfilter
-        - entfernt noise -> smoothing
-        - Typen
-            - mean (zB 1/9 * (3x3 mit Einsen))
-            - gauß
-            - median
-                - keine convolution!
-                - pixel nach wert ordnen, median nehmen
-                - nichtlinear
-                - gut für unvollständige Bilder, und binärnoise (zB photon noise)
-    - Hochpassfilter
-        - zB 1/9 * (3x3 mit -1 und 8 in der Mitte)
-        - summe der kernelwerte: 0
-        - verstärkt noise
-        - derivative filters zur Gradientenerkennung
++ Spatial Filtering
+    + convolution mit 3x3 filter kernel
+    + Tiefpassfilter
+        + summe der kernelwerte: 1
+        + entfernt noise -> smoothing
+        + Typen
+            + mean (zB 1/9 * (3x3 mit Einsen))
+            + gauß
+            + median
+                + keine convolution!
+                + pixel nach wert ordnen, median nehmen
+                + nichtlinear
+                + gut für unvollständige Bilder, und binärnoise (zB photon noise)
+    + Hochpassfilter
+        + zB 1/9 * (3x3 mit -1 und 8 in der Mitte)
+        + summe der kernelwerte: 0
+        + verstärkt noise
+        + derivative filters zur Gradientenerkennung
             sobel operator [-1 -2 -1, 0 0 0, 1 2 1] ist Ableitung nach y
-        - stabiler: vorher tiefpassfiltern. bzw den kernel gaußfiltern
-        - zweiter ableitung: [-1 2 -1] bzw [0 -1 0, -1 4 -1, 0 -1 0]
-            - oder marr-hildreth operator ("mexican hat")
-                - sharp gaussian - wide gaussian
-                - symmetrisch -> in alle richtungen gleich
-                - geschlossene konturen
-                - funzt mit blurry edges
-                - noise unterdrückung
-                - zu viele kanten
-             - findet zero-crossings
-         - canny edge detector
-            - wie gehts?
-            - doppelkanten für schmale linien
-        - probleme
-            - kanten des bildes
-            - dünne linien werden verdoppelt
-            - manuelles parameter fiddling
-- hough filter
-    - für jeden pixel des kantenbildes im 2D parameter space alle pixel erhöhen, dessen linien durch den pixel führen könnten
-- feature point detection
-    - harris corner detector
-        - fenster suchen, die sich beim verschieben genug ändern
+        + stabiler: vorher tiefpassfiltern. bzw den kernel gaußfiltern
+        + zweiter ableitung: [-1 2 -1] bzw [0 -1 0, -1 4 -1, 0 -1 0]
+            + oder marr-hildreth operator ("mexican hat")
+                + sharp gaussian - wide gaussian
+                + symmetrisch -> in alle richtungen gleich
+                + geschlossene konturen
+                + funzt mit blurry edges
+                + noise unterdrückung
+                + zu viele kanten
+             + findet zero-crossings
+         + canny edge detector
+            + doppelkanten für schmale linien
+        + probleme
+            + dünne linien werden verdoppelt
+            + manuelles parameter fiddling
++ hough filter
+    + für jeden pixel des kantenbildes im 2D parameter space alle pixel erhöhen, dessen linien durch den pixel führen könnten
++ feature point detection
+    + harris corner detector
+        + fenster suchen, die sich beim verschieben genug ändern
 - point feature corresponcdence matching
     - block-based
     - sum-of-squared-error
@@ -133,38 +83,7 @@
 04 - Projective Transformation
 ==============================
 
-- Kameramodelle
-    - perspektivische Projektion (Pinhole)
-        - x = f*r/g
-            x: Abstand x in der Bildebene (Koordinate)
-            f: Abstand der Bildebene vom Loch (fokale Länge)
-            r: Abstand des Punktes von der Mittelachse
-            g: Abstand des Punktes vom Loch
-        - Eigenschaften
-            - Geraden -> Geraden
-            - bei Ebenen parallel zur Bildebene -> gleiche Winkel
-            - doppelter Abstand -> halbe Größe
-            - doppelte fokale Länge -> verdoppelte Größe
-            - Verschiebung parallel zur Bildebene -> Verschiebung
-    - parallele Projektion
-        - wie bei starken tele-lenses
-- 3D auf 2D Projektion
-    - x' = f*x/z
-    - y' = f*y/z
 - Homogeneous coordinates
-    - good for relating points and lines
-    - für 2D: Dritte Koordinate hinzufügen
-        - (x y) -> (x y 1)
-        - (x y w) -> (x/w y/w)
-    - erlaubt vor allem Translation durch 3x3-Matrix darzustellen
-    - Geradendarstellung:
-        - (a b c) als Normale auf der Ebene, die durch den Ursprung und der Geraden, um 1 in z verschoben
-            - Gerade erfüllt dann ax + by + c = 0
-    - Test, ob Punkt auf Linie liegt: x*l = 0, wobei l = (a b c), x = (x y w)
-    - Schnittpunkt von Linien
-        - l' cross l = x wobei x Schnittpunkt
-    - Linie durch zwei Punkte
-        - x' cross x = l
 - Projektive Transformation
     - Punkt auf einer Ebene auf eine andere projizieren, hinsichtlich eines Projektionszentrums
 - Homography
@@ -206,72 +125,67 @@
 05 - Geometry from images
 =========================
 
-- Bestandteile von Bildformationen
-    - 3D-Geometrie
-    - Textur
-    - BRDF
-    - Illumination
-- Kamerakalibrierung
-    - extrinsische (6)
-        - Position des Projektionszentrums
-        - Richtung der optischen Achse
-        - Rotation um die Achse
-    - intrinsische
-        - Focal length
-        - Pixel width & height
-        - image plane shift
-- Perspektive Projektion
-    - hoomogene Formulierung: [s*x, s*y, s] = [f 0 0 0, 0 f 0 0, 0 0 1 0] * [X, Y, Z, 1]
-    - von Abständen zu Pixeln:
-        - u = u_c + x/pixel_width, entsprechen für v und y
-        - Matrixschreibweise: [s*u, s*v, s] = [f/pw 0 u_c 0, 0 f/ph v_c 0, 0 0 1 0]*[X, Y, Z, 1] = P * M~
-- Kameramatrix K = [a b c t_x, d e f t_y, g h i t_z, 0 0 0 1] enthält Translation und Rotation der Kamera (6 dof)
-- Welt-zu-Kamera: Kamera-Kalibrations-Matrix C = P*K
-    - die wollen wir schätzen! 11 dof, einer kann normiert werden
-    - brauchen 6 Punktkorrespondenzen
-        - zB mit Kalibrierkörper (wie genau? Folie 11-15 )
-- Stereo-Rekonstruktion
-    - zwei Kameras kallibiert: Punkt mit unbekanntem Abstand erzeugt in anderer Kamera Epipolarlinie
-    - Kamera-baseline schneidet die Bildebene bei den Epipolen, dort gehen alle Epipolarlinien durch
-    - Punkt kann dann durchs Schneiden der Strahlen rekonstruiert werden
-    - nun: Nur Punktkorrespondenzen bekannt
-        - x' = H_pi * x
-        - l' = e' cross x' ist die Epiloarlinie auf dem zweiten Bild
-        - dann gilt l' = e' cross H_pi * x = F * x (F Fundamentalmatrix)
-            - die Fundamentalmatrix F mappt Punkte auf ihre Epipolarlinien im anderen Bild
-        - und x'^T * F * x = 0
-        - für die Epipole gilt: e'^T * F = 0, und F*e = 0
-        - mit einigen Punktpaaren kann man dann nach F lösen ^^
-        - gut: bei der Berechnung auf 1 normieren
-    - wenn Kameramatrizen C und C' bekannt
-        - C * [X,Y,Z,1] = [s*u, s*v, s] und entsprechend für C'. Leicht lösbar.
-- Bilder rektifizieren
-    - beide Bilder auf große Leinwand projezieren (von den Projektionszentren aus), dann Homographie auf gemeinsame Bildebene
-    - dann laufen die Epipolarlinien parallel
-    - Nachteil: Resampeln nötig
-    - Disparität d = x_links - x_rechts = f*b/z
-- Matching
-    - besten nxn-Block suchen
-    - Constraints:
-        - Reihenfolge des Auftauchens bleibt erhalten
-        - Uniqueness: Korrespondenz der Punkte ist bidirektional
-        - Disparität innerhalb eines Bereiches
-        - Kontinuierlichkeit der Disparität
-- (Einiges von M übersprungen um 48 herum)
-- Mergen von Tiefenkarten
-    - Iterative Closest Point Algorithm
-        - fügt zwei 3D-Oberflächen zusammen durch iteratives Verfahren
-    - Volumetric Depth Map Merging
-        - voxel wegschneiden aus verschiedenen Perspektiven
-- Shape-from-silhouette
-    - siluetten aus verschiedenen Perspektiven schneiden -> Konvexe hülle des Objektes
-    - schnell
-- Space carving
-    - zusammenpassende Farbwerte betrachten
-    - iterativ, langsam
-    - robust
-    - keine Bildsegmentierung notwendig
-    - robust gegen ungenaue Kalibierung
++ Bestandteile von Bildformationen
+    + 3D-Geometrie
+    + Textur
+    + BRDF
+    + Illumination
++ Kamerakalibrierung
+    + extrinsische (6)
+        + Position des Projektionszentrums
+        + Richtung der optischen Achse
+        + Rotation um die Achse
+    + intrinsische
+        + Focal length
+        + Pixel width & height
+        + image plane shift
++ Perspektive Projektion
+    + hoomogene Formulierung: [s*x, s*y, s] = [f 0 0 0, 0 f 0 0, 0 0 1 0] * [X, Y, Z, 1]
+    + von Abständen zu Pixeln:
+        + u = u_c + x/pixel_width, entsprechen für v und y
+        + Matrixschreibweise: [s*u, s*v, s] =
+            [f/pw 0    u_c 0
+             0    f/ph v_c 0
+             0    0    1   0]*[X, Y, Z, 1] = P * M~
++ Kameramatrix K = [a b c t_x
+                    d e f t_y
+                    g h i t_z
+                    0 0 0 1  ] enthält Translation und Rotation der Kamera (6 dof)
++ Welt-zu-Kamera: Kamera-Kalibrations-Matrix C = P*K
+    + die wollen wir schätzen! 11 dof, einer kann normiert werden
+    + brauchen 6 Punktkorrespondenzen
+        + zB mit Kalibrierkörper (wie genau? Folie 11-15 )
++ Stereo-Rekonstruktion
+    + zwei Kameras kallibiert: Punkt mit unbekanntem Abstand erzeugt in anderer Kamera Epipolarlinie
+    + Kamera-baseline schneidet die Bildebene bei den Epipolen, dort gehen alle Epipolarlinien durch
+    + Punkt kann dann durchs Schneiden der Strahlen rekonstruiert werden
+    + nun: Nur Punktkorrespondenzen bekannt
+        + Epipolarlinie berechnen mit F * x
+        + Fundamentalmatrix F = e' x H_pi
+            e': epipolarpunkt im zweiten Bild
+            H_pi: Projektive Matrix, die x auf x' mappt
+        + mit einigen Punktpaaren kann man dann nach F lösen ^^
+        + gut: bei der Berechnung auf 1 normieren
++ Bilder rektifizieren
+    + beide Bilder auf große Leinwand projezieren, die parallel zu der baseline läuft (von den Projektionszentren aus), dann Homographie auf gemeinsame Bildebene
+    + dann laufen die Epipolarlinien parallel
+    + Nachteil: Resampeln nötig
+    + Disparität d = x_links - x_rechts = f*b/z
++ Matching
+    + besten nxn-Block suchen
+    + Constraints:
+        + Reihenfolge des Auftauchens bleibt erhalten
+        + Uniqueness: Korrespondenz der Punkte ist bidirektional
+        + Disparität innerhalb eines Bereiches
+        + Kontinuierlichkeit der Disparität
++ Mergen von Tiefenkarten
+    + Iterative Closest Point Algorithm
+        + fügt zwei 3D-Oberflächen zusammen durch iteratives Verfahren
+    + Volumetric Depth Map Merging
+        + voxel wegschneiden aus verschiedenen Perspektiven
++ Shape-from-silhouette
+    + siluetten aus verschiedenen Perspektiven schneiden -> Konvexe hülle des Objektes
+    + schnell
 
 06 - Shape from X
 =================
@@ -587,17 +501,65 @@
 Klausur
 =======
 
-- 50% multiple choice (falsch: Minuspunkte, teilweise auch mehrere Antworten richtig), 50% Aufgaben
++ 50% multiple choice (falsch: Minuspunkte, teilweise auch mehrere Antworten richtig), 50% Aufgaben
 - Taschenrechner erlaubt
-- homogener Mathequatsch - Geraden schneiden etc, was können Projektionen
-- Kamerageometrie - "4 Linien, Strahlensatz"
-- nicht große Mengen Formeln
-- Materialiengeschichten, BRDF: was ist damit einfach/schwierig?
++ homogener Mathequatsch - Geraden schneiden etc
+    + good for relating points and lines
+    + für 2D: Dritte Koordinate hinzufügen
+    + erlaubt vor allem Translation durch 3x3-Matrix darzustellen
+    + Geradendarstellung:
+        + (a b c) als Normale auf der Ebene, die durch den Ursprung und der Geraden, um 1 in z verschoben
+            + Gerade erfüllt dann ax + by + c = 0
+    + Test, ob Punkt auf Linie liegt: x*l = 0, wobei l = (a b c), x = (x y w)
+    + Schnittpunkt von Linien: l' cross l = x
+    + Linie durch zwei Punkte: x' cross x = l
+- was können Projektionen
++ Kamerageometrie - "4 Linien, Strahlensatz"
+    + perspektivische Projektion (Pinhole)
+        + x = f*r/g bzw f/x = g/r
+            x: Abstand x in der Bildebene (Koordinate)
+            f: Abstand der Bildebene vom Loch (fokale Länge)
+            r: Abstand des Punktes von der Mittelachse
+            g: Abstand des Punktes vom Loch
+        + Eigenschaften
+            + Geraden -> Geraden
+            + bei Ebenen parallel zur Bildebene -> gleiche Winkel
+            + doppelter Abstand -> halbe Größe
+            + doppelte fokale Länge -> verdoppelte Größe
+            + Verschiebung parallel zur Bildebene -> Verschiebung
+    + parallele Projektion
+        + wie bei starken tele-lenses
++ Materialiengeschichten, BRDF: was ist damit einfach/schwierig?
 - Korrespondenzschätzungen: Begrifflichkeiten, 2D, 3D, Folien mit tanzender Figur o_O (keine Formeln)
-- 2D image processing, Filter, was funktioniert gut/schlecht?
-- menschliche Wahrnehmung: Nix biologisches
-- keine Hardware
++ 2D image processing, Filter, was funktioniert gut/schlecht?
++ menschliche Wahrnehmung: Nix biologisches
 - IBR, Lichtfeldrendering, Lumigraph, was unterscheidet die
 - keine Funktionsweise von Algorithmen
-- fehlende Folien in 5/space carving nicht relevant
++ fehlende Folien in 5/space carving nicht relevant
 - keine Interna von Optimierungsverfahren
++ keine Hardware
+- nicht große Mengen Formeln
+
+Lernen
+======
+
+- Momente erster Ordnung
+    Anzahl, Mittelwert, Varianz, Skewness, Kurtosis
+- Wie heißt der Wellenschnittalgo
+    Hough Filter
+- Die 3 Ableitungsfilter und ihre Eigenschaften
+    Sobel filter
+        eine Richtung
+    Marr-Hildreth operator
+        Richtungssymmetrisch
+        geschlossene Konturen, aber zu viele
+    Canny edge detector
+        Doppelkanten
+- Feature punkt such dinge
+    Harris corner detector, SIFT
+- Perspektivische Projektion
+- Kameramatrix (siehe oben)
+- Wie heißt das zusammen?
+    Kamera-Kalibrations-Matrix
+- Verfahren für 3D-rekonstruktion
+    Volumetric Depth Map Merging, Space Carving, Iterative Closest Point Algo
