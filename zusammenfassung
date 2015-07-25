@@ -17,7 +17,7 @@
         - vor allem bei niedrigen Lichtverhältnissen relevant
         - Gegenmaßnahme: Guter Sensor, oder seltener auslesen
 - Signal-to-Noise Ratio
-    - (Formel)
+    - TODO (Formel)
 - Photonenstatistik
     - Photonen fallen Poisson-verteilt auf den Sensor
 - Weitere Effekte
@@ -33,42 +33,41 @@
 02 - Natural Images
 ===================
 
-- Natural Image Statistics
-    - Erster Ordnung: Pixel einzeln betrachten
-        - Histogramm
-            - die Verteilung der log(intensity) ist bei natürlichen Bildern oft symmetrisch
-        - Kontrast
-            - Kontrastverbesserung durch normalisieren des kumulativen Histograms
-        - Momente berechnen (Formel)
-            - misst die "Gaussheit"
-            - k=0: Anzahl
-            - k=1: Mittelwert
-            - k=2: Varianz
-            - k=3: Skewness (Asymmetrie)
-                - bei glossy Oberflächen
-            - k=4: Kurtosis (Peakness)
-        - Nachteil: Keine räumliche Information
-    - Zweiter Ordnung: Beziehung zwischen Nachbarpixeln betrachten (Gradienten)
-        - Gradient ist meistens nahe 0 -> einfarbige Flächen
-        - Pearson Correlation misst lineare Abhängigkeit von Verteilungen?
-            - Zwischen 1 (identisch), 0 (tritt auf bei fehlender Korrelation) und -1 (inverse Verteilung)
-            - in natürlichen Bildern oft 0.8 und 0.95 zwischen benachbarten Pixeln
-            - auch Korrelation bei Pixeln, die weiter voneinander entfernt sind!
-        - Anisotropische Diffusion?
-        - Fourier Transformation -> Power Spectrum (quadrierter Betrag)
-        - Autokorrelations-Funktion
-            - räumlich: Convolution
-            - Frequenzraum: Multiplikation mit complexer Konjugierten: R(u,v) = F(u,v)*F(u,v)^*
-            - ganz viel Schmu mit power spektren (um Folie 36)
-                - die Slope ist um 2
-                - und (natürlich) horizontale und vertikale Linien sind stärker ausgeprägt
-                - über diese Ausprägung kann man auch natürliche und menschengemachte Szenen unterscheiden
-    - Higher Order: Pixelblöcke, zB 3x3
-        - Topologie der kontrastreichsten Blöcke ist eine kleinsche Flasche!
-        - Phaseninformationen in der FT enthalten die wesentlichen Informationen des Bildes
-        - Wavelet Transformation
-            - Haar Wavelet: gut komprimierbar
-            - Gabor Wavelet: Ähnlich zur Funktionsweise des Hirns
+- Erster Ordnung: Pixel einzeln betrachten
+    - Histogramm
+        - die Verteilung der log(intensity) ist bei natürlichen Bildern oft symmetrisch
+    - Kontrast
+        - Kontrastverbesserung durch normalisieren des kumulativen Histograms
+    - Momente berechnen (Formel)
+        - misst die "Gaussheit"
+        - k=0: Anzahl
+        - k=1: Mittelwert
+        - k=2: Varianz
+        - k=3: Skewness (Asymmetrie)
+            - bei glossy Oberflächen
+        - k=4: Kurtosis (Peakness)
+    - Nachteil: Keine räumliche Information
+- Zweiter Ordnung: Beziehung zwischen Nachbarpixeln betrachten (Gradienten)
+    - Gradient ist meistens nahe 0 -> einfarbige Flächen
+    - Pearson Correlation misst lineare Abhängigkeit von Verteilungen?
+        - Zwischen 1 (identisch), 0 (tritt auf bei fehlender Korrelation) und -1 (inverse Verteilung)
+        - in natürlichen Bildern oft 0.8 und 0.95 zwischen benachbarten Pixeln
+        - auch Korrelation bei Pixeln, die weiter voneinander entfernt sind!
+    - Anisotropische Diffusion?
+    - Fourier Transformation -> Power Spectrum (quadrierter Betrag)
+    - Autokorrelations-Funktion
+        - räumlich: Convolution
+        - Frequenzraum: Multiplikation mit complexer Konjugierten: R(u,v) = (F(u,v)*F(u,v))^*
+        - ganz viel Schmu mit power spektren (um Folie 36)
+            - die Slope ist um 2
+            - und (natürlich) horizontale und vertikale Linien sind stärker ausgeprägt
+            - über diese Ausprägung kann man auch natürliche und menschengemachte Szenen unterscheiden
+- Higher Order: Pixelblöcke, zB 3x3
+    - Topologie der kontrastreichsten Blöcke ist eine kleinsche Flasche!
+    - Phaseninformationen in der FT enthalten die wesentlichen Informationen des Bildes
+    - Wavelet Transformation
+        - Haar Wavelet: gut komprimierbar
+        - Gabor Wavelet: Ähnlich zur Funktionsweise des Hirns
 
 03 - Image Processing
 =====================
@@ -91,10 +90,6 @@
                 - pixel nach wert ordnen, median nehmen
                 - nichtlinear
                 - gut für unvollständige Bilder, und binärnoise (zB photon noise)
-                - MAGGI!!!!!!!!!!!!!!!!!!!!1
-                - MAGGI!!!!!!!!!!!!!!!!!!!!1
-                - MAGGI!!!!!!!!!!!!!!!!!!!!1
-                - MAGGI!!!!!!!!!!!!!!!!!!!!1
     - Hochpassfilter
         - zB 1/9 * (3x3 mit -1 und 8 in der Mitte)
         - summe der kernelwerte: 0
@@ -520,7 +515,7 @@
             - vertikale Views nicht darstellbar
         - Würfel
             - einfach, alle Richtungen
-            - Distortion an den Kanten?
+            - Distortion an den Kanten
     - Concentric Mosaics
         - viewpoint auf fester Ebene
         - rotierender Balken, mehrere Kameras darauf machen Aufnahmen
@@ -588,3 +583,21 @@
         - starke kanten suchen, dann farbdiffusion von denen aus
         - kantenpixel zuordnen, dann warping berechnen
         - voll tolle erbnisse -.-
+
+Klausur
+=======
+
+- 50% multiple choice (falsch: Minuspunkte, teilweise auch mehrere Antworten richtig), 50% Aufgaben
+- Taschenrechner erlaubt
+- homogener Mathequatsch - Geraden schneiden etc, was können Projektionen
+- Kamerageometrie - "4 Linien, Strahlensatz"
+- nicht große Mengen Formeln
+- Materialiengeschichten, BRDF: was ist damit einfach/schwierig?
+- Korrespondenzschätzungen: Begrifflichkeiten, 2D, 3D, Folien mit tanzender Figur o_O (keine Formeln)
+- 2D image processing, Filter, was funktioniert gut/schlecht?
+- menschliche Wahrnehmung: Nix biologisches
+- keine Hardware
+- IBR, Lichtfeldrendering, Lumigraph, was unterscheidet die
+- keine Funktionsweise von Algorithmen
+- fehlende Folien in 5/space carving nicht relevant
+- keine Interna von Optimierungsverfahren
