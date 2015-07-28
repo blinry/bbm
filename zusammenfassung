@@ -401,6 +401,13 @@
         + kantenpixel zuordnen, dann warping berechnen
         + voll tolle erbnisse \o/ \o/
 
+11 - Different Stuff
+====================
+
+- Photo Zoom: Fotos aus mehreren Abständen, daraus einen flüssigen Zoom berechnen
+- Alternate Exposure Imaging: Abwechselnd lang und kurz belichten, daraus Flussinformationen
+- Floating Textures: Besseres Texturemapping aus unbekannten Richtungen auf approximierter Geometrie mittels Fluss!
+
 Klausur
 =======
 
@@ -446,11 +453,11 @@ Klausur
 Lernen
 ======
 
-- Momente erster Ordnung
++ Momente erster Ordnung
     Anzahl, Mittelwert, Varianz, Skewness, Kurtosis
-- Wie heißt der Wellenschnittalgo
++ Wie heißt der Wellenschnittalgo
     Hough Filter
-- Die 3 Ableitungsfilter und ihre Eigenschaften
++ Die 3 Kantenerkennungsdingis und ihre Eigenschaften
     Sobel filter
         eine Richtung
     Marr-Hildreth operator
@@ -458,38 +465,37 @@ Lernen
         geschlossene Konturen, aber zu viele
     Canny edge detector
         Doppelkanten
-- Feature punkt such dinge
++ Feature punkt such dinge
     Harris corner detector, SIFT
-- Perspektivische Projektion
-- Kameramatrix (siehe oben)
-- Wie heißt das zusammen?
++ Kameramatrizen (siehe oben)
++ Wie heißt das zusammen?
     Kamera-Kalibrations-Matrix
-- Verfahren für 3D-rekonstruktion
++ Verfahren für 3D-rekonstruktion
     Volumetric Depth Map Merging, Space Carving, Iterative Closest Point Algo
 - IBR-Verfahren
     Light field rendering, concentric mosaics, lumigraph, view morphing, surface light fields, view-dependent texture mapping
-- bewegungsfluss-dinge
++ bewegungsfluss-dinge
     Scene Flow, Motion Flow, Optical Flow
 - interpolation algorithms
     perception-based interpolation, spacetime coherence
-- wie heißt die IBR-Funktion?
++ wie heißt die IBR-Funktion?
     plenoptische
-- projektive transformationen
++ transformations-arten
     euclidean 3
     similarity 4
     affine 6
     projective 8
-- projektive transformation aus >= 4 korrespondenzen
++ projektive transformation aus >= 4 korrespondenzen
     DLT
-- falsche korrespondenzen
++ falsche korrespondenzen
     RANSAC
 - korrespondenzen optimieren
-    Gauss-Newton, Levenberg-Marquardt-Iteration
+    Gauss-Newton
 - dreikreise
     photometric stereo
 - drehwinkelabhängigkeit
     anisotropisch
-- BRDF taxonomie
++ BRDF taxonomie
     0D/1D gloss
     3D isotropic BRDF
     4D (anisotropic) BRDF
@@ -497,9 +503,14 @@ Lernen
     8D single wavelength
     9D ganzes spektrum
     12D + zeit und fluoreszenz
-- was geht nicht gut mit BRDF
++ was geht nicht gut mit BRDF
     volumetrische strukturen
+    durchsichtiger kram
 - frequenzabbildungsmessung
-    Modulation Transfer Function, Line Spread Function
+    Modulation Transfer Function, Line Spread Function -> slanted edge
+- HDR-Berechnung
+    Robertson
 - verwackelte bilder aufeinander mappen
     Median Threshold Bitmap
+- Volumenrekonstruktion
+    Tomographie
